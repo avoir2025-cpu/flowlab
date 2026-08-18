@@ -63,6 +63,8 @@ section{padding:52px 0;}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:rgba(255,255,255,.12);outline:none;cursor:pointer;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--gold-bright);border:3px solid #0B1220;box-shadow:0 0 0 1px var(--gold),0 2px 8px rgba(0,0,0,.5);}
 input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--gold-bright);border:3px solid #0B1220;box-shadow:0 0 0 1px var(--gold);}
+.warn-note{display:none;font-size:.78rem;color:var(--neg);background:rgba(240,113,108,.08);border:1px solid rgba(240,113,108,.35);border-radius:8px;padding:8px 12px;margin-top:10px;line-height:1.6;}
+.warn-note.show{display:block;}
 
 /* results */
 .vs-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch;margin-top:22px;}
@@ -157,15 +159,20 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
         <input type="range" id="inAge" min="25" max="60" step="1" value="35">
       </div>
       <div class="field">
+        <div class="f-head"><div class="f-label">平均月收入</div><div class="f-val"><span id="vSal"></span><small>萬／月</small></div></div>
+        <input type="range" id="inSal" min="2" max="30" step="0.5" value="8">
+      </div>
+      <div class="field">
         <div class="f-head"><div class="f-label">每月生活開銷<small>退休後想維持的月生活水準</small></div><div class="f-val"><span id="vExp"></span><small>萬／月</small></div></div>
         <input type="range" id="inExp" min="2" max="20" step="0.5" value="5">
       </div>
       <div class="field">
-        <div class="f-head"><div class="f-label">每月能存下來的錢</div><div class="f-val"><span id="vSave"></span><small>萬／月</small></div></div>
+        <div class="f-head"><div class="f-label">每月儲蓄</div><div class="f-val"><span id="vSave"></span><small>萬／月</small></div></div>
         <input type="range" id="inSave" min="0" max="15" step="0.5" value="2">
+        <div class="warn-note" id="saveWarn"></div>
       </div>
       <div class="field">
-        <div class="f-head"><div class="f-label">目前可動用的資產<small>存款、可變現的投資</small></div><div class="f-val"><span id="vWealth"></span><small>萬</small></div></div>
+        <div class="f-head"><div class="f-label">累積資產<small>儲蓄、股票、基金……</small></div><div class="f-val"><span id="vWealth"></span><small>萬</small></div></div>
         <input type="range" id="inWealth" min="0" max="3000" step="50" value="100">
       </div>
       <div class="field">
@@ -175,10 +182,6 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
       <div class="field" id="fMortgage" style="display:none;">
         <div class="f-head"><div class="f-label">房貸餘額</div><div class="f-val"><span id="vMortgage"></span><small>萬</small></div></div>
         <input type="range" id="inMortgage" min="0" max="4000" step="50" value="0">
-      </div>
-      <div class="field">
-        <div class="f-head"><div class="f-label">平均月收入</div><div class="f-val"><span id="vSal"></span><small>萬／月</small></div></div>
-        <input type="range" id="inSal" min="2" max="30" step="0.5" value="8">
       </div>
     </div>
 
@@ -192,7 +195,7 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
       <div class="vs-card alt">
         <div class="t">換一個順序</div>
         <div class="age" id="ageB">—</div>
-        <div class="cap">只需要 <b id="capB">—</b> 萬<br>讓資產先開始工作</div>
+        <div class="cap" id="capBCap">—</div>
       </div>
     </div>
     <div class="delta" id="deltaLine"></div>
@@ -209,6 +212,10 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
         <div class="field">
           <div class="f-head"><div class="f-label">順序路徑：月配息率</div><div class="f-val"><span id="vRateB"></span><small>%／月</small></div></div>
           <input type="range" id="inRateB" min="0.3" max="1" step="0.05" value="0.7">
+        </div>
+        <div class="field">
+          <div class="f-head"><div class="f-label">順序路徑：資金運用倍數</div><div class="f-val">×<span id="vMult"></span></div></div>
+          <input type="range" id="inMult" min="1" max="2" step="0.1" value="2">
         </div>
       </div>
     </details>
@@ -254,9 +261,17 @@ const CONFIG = {
 };
 
 const el = id => document.getElementById(id);
-let state = { age:35, exp:5, save:2, wealth:100, house:0, mortgage:0, sal:8, rateA:1.7, rateB:0.7 };
+let state = { age:35, exp:5, save:2, wealth:100, house:0, mortgage:0, sal:8, rateA:1.7, rateB:0.7, mult:2 };
 /* 房貸統一假設：貸 8 成、30 年期、利率 3% */
 const HOUSE = { ltv:0.8, years:30, rate:3.0 };
+/* 本息平均攤還月付金（萬） */
+function annuityM(P, annualRate, years){
+  const r=annualRate/100/12, n=years*12;
+  if(P<=0) return 0;
+  if(r===0) return P/n;
+  const f=Math.pow(1+r,n);
+  return P*r*f/(f-1);
+}
 
 /* 每月複利累積到目標本金所需月數；到不了回傳 Infinity */
 function monthsToTarget(W, S, r, T){
@@ -271,10 +286,22 @@ function monthsToTarget(W, S, r, T){
 
 function calc(s){
   const capA = s.exp * 12 / (s.rateA/100);        // 靠定存利息過活所需本金（萬）
-  const capB = s.exp / (s.rateB/100);             // 靠假設配息過活所需本金（萬）
+
+  /* 房產整合結構：整合貸款＝市值×8成，清償餘額拿回現金，×倍數投入；
+     配息先支付整筆月付，剩餘為每月淨貢獻。淨貢獻≤0 就視同不做這個結構 */
+  let houseNet = 0, cashOut = 0, housePay = 0;
+  if(s.house > 0){
+    const loan = s.house * HOUSE.ltv;
+    const c = Math.max(0, loan - s.mortgage);
+    housePay = annuityM(loan, HOUSE.rate, HOUSE.years);
+    const hn = c * s.mult * (s.rateB/100) - housePay;
+    if(c > 0 && hn > 0){ houseNet = hn; cashOut = c; }
+  }
+
+  const capB = Math.max(0, s.exp - houseNet) / (s.rateB/100);   // 房產結構外，還需要的配息本金
   const mA = monthsToTarget(s.wealth, s.save, s.rateA/100/12, capA);
-  const mB = monthsToTarget(s.wealth, s.save, s.rateB/100, capB);
-  return { capA, capB,
+  const mB = monthsToTarget(s.wealth, s.save + houseNet, s.rateB/100, capB);
+  return { capA, capB, houseNet, cashOut, housePay,
     ageA: mA === Infinity ? Infinity : s.age + mA/12,
     ageB: mB === Infinity ? Infinity : s.age + mB/12 };
 }
@@ -303,13 +330,27 @@ function update(){
   el('vSal').textContent = state.sal;
   el('vRateA').textContent = state.rateA.toFixed(1);
   el('vRateB').textContent = state.rateB.toFixed(2);
-  ['inAge','inExp','inSave','inWealth','inHouse','inMortgage','inSal','inRateA','inRateB'].forEach(id=>paintRange(el(id)));
+  el('vMult').textContent = state.mult.toFixed(1);
+
+  const room = state.sal - state.exp;
+  const sw = el('saveWarn');
+  if(room < state.save){
+    sw.textContent = `月收入 ${state.sal} 萬 − 開銷 ${state.exp} 萬 = ${room.toFixed(1)} 萬，低於你填的每月儲蓄 ${state.save} 萬，數字對不上，請調整其中一項。`;
+    sw.classList.add('show');
+  }else{
+    sw.classList.remove('show');
+  }
+  ['inAge','inExp','inSave','inWealth','inHouse','inMortgage','inSal','inRateA','inRateB','inMult'].forEach(id=>paintRange(el(id)));
 
   const r = calc(state);
   el('ageA').textContent = fmtAge(r.ageA);
   el('ageB').textContent = fmtAge(r.ageB);
   el('capA').textContent = fmtCap(r.capA);
-  el('capB').textContent = fmtCap(r.capB);
+  el('capBCap').innerHTML = r.houseNet>0
+    ? (r.capB>0
+        ? `房產結構每月先貢獻 <b>+${r.houseNet.toFixed(1)} 萬</b><br>再累積 <b>${fmtCap(r.capB)} 萬</b>就到位`
+        : `房產結構的月現金流<br><b>已可支應生活開銷</b>`)
+    : `只需要 <b>${fmtCap(r.capB)} 萬</b><br>讓資產先開始工作`;
 
   let delta = '';
   if(r.ageA === Infinity && r.ageB !== Infinity){
@@ -322,27 +363,34 @@ function update(){
   }
   el('deltaLine').innerHTML = delta;
 
-  const ratio = r.capB > 0 ? (r.capA/r.capB) : 0;
-  el('whyLine').innerHTML = `為什麼差這麼多？傳統路徑要求你把本金存到「利息夠生活」，需要 <b>${fmtCap(r.capA)} 萬</b>；順序路徑是讓每一塊錢先進到會產生現金流的位置，需要的本金只有 <b>${fmtCap(r.capB)} 萬</b>，差了約 <b>${ratio.toFixed(1)} 倍</b>。差別不在你存多少，在錢排隊的順序。`;
+  if(r.houseNet>0){
+    el('whyLine').innerHTML = r.capB>0
+      ? `為什麼差這麼多？順序路徑先把房產整合：拿回 <b>${fmtCap(r.cashOut)} 萬</b>現金投入配置，配息把整筆房貸月付（${r.housePay.toFixed(1)} 萬）付掉之後，每月還多 <b>+${r.houseNet.toFixed(1)} 萬</b>；剩下的缺口只需要 <b>${fmtCap(r.capB)} 萬</b>本金，比傳統路徑的 <b>${fmtCap(r.capA)} 萬</b>小得多。差別不在你存多少，在錢排隊的順序。`
+      : `為什麼？順序路徑把房產整合後：拿回 <b>${fmtCap(r.cashOut)} 萬</b>現金投入配置，配息付掉整筆房貸月付（${r.housePay.toFixed(1)} 萬）之後每月還多 <b>+${r.houseNet.toFixed(1)} 萬</b>，已經超過你的月開銷。傳統路徑則還需要存到 <b>${fmtCap(r.capA)} 萬</b>。差別不在你存多少，在錢排隊的順序。`;
+  }else{
+    const ratio = r.capB > 0 ? (r.capA/r.capB) : 0;
+    el('whyLine').innerHTML = `為什麼差這麼多？傳統路徑要求你把本金存到「利息夠生活」，需要 <b>${fmtCap(r.capA)} 萬</b>；順序路徑是讓每一塊錢先進到會產生現金流的位置，需要的本金只有 <b>${fmtCap(r.capB)} 萬</b>，差了約 <b>${ratio.toFixed(1)} 倍</b>。差別不在你存多少，在錢排隊的順序。`;
+  }
 
   const credit = state.sal*22;
-  const houseLoan = Math.max(0, state.house*HOUSE.ltv - state.mortgage);
-  const resources = state.wealth + houseLoan + credit;
-  const coverage = r.capB>0 ? resources/r.capB*100 : 0;
-  const parts = [`可動用資產 <b>${fmtCap(state.wealth)} 萬</b>`];
-  if(houseLoan>0) parts.push(`房產可貸空間約 <b>${fmtCap(houseLoan)} 萬</b>`);
-  parts.push(`信用空間約 <b>${fmtCap(credit)} 萬</b>`);
-  const partsText = parts.join('＋');
-  el('resLine').innerHTML = coverage>=100
-    ? `其實你手上的資源已經夠了：${partsText}，合計 <b>${fmtCap(resources)} 萬</b>，超過順序路徑需要的本金。差的不是錢，是順序和結構。`
-    : `其實你手上已經有資源：${partsText}，合計 <b>${fmtCap(resources)} 萬</b>，離順序路徑需要的本金已經走了 <b>${Math.min(coverage,999).toFixed(0)}%</b>。剩下的怎麼補、怎麼安全地用，是可以坐下來聊的事。`;
+  if(r.houseNet>0){
+    el('resLine').innerHTML = r.capB>0
+      ? `房產已經算進去了，而你還有一張牌沒用：信用空間約 <b>${fmtCap(credit)} 萬</b>（可動用資產 ${fmtCap(state.wealth)} 萬也已計入）。剩下的缺口怎麼補、怎麼安全地走，是可以坐下來聊的事。`
+      : `這個結果只用了你的房產和 <b>${fmtCap(state.wealth)} 萬</b>資產，信用空間約 <b>${fmtCap(credit)} 萬</b>都還沒動。怎麼安全地走到這一步，是可以坐下來聊的事。`;
+  }else{
+    const resources = state.wealth + credit;
+    const coverage = r.capB>0 ? resources/r.capB*100 : 0;
+    el('resLine').innerHTML = coverage>=100
+      ? `其實你手上的資源已經夠了：可動用資產 <b>${fmtCap(state.wealth)} 萬</b>＋信用空間約 <b>${fmtCap(credit)} 萬</b>，合計 <b>${fmtCap(resources)} 萬</b>，超過順序路徑需要的本金。差的不是錢，是順序和結構。`
+      : `其實你手上已經有資源：可動用資產 <b>${fmtCap(state.wealth)} 萬</b>＋信用空間約 <b>${fmtCap(credit)} 萬</b>，合計 <b>${fmtCap(resources)} 萬</b>，離順序路徑需要的本金已經走了 <b>${Math.min(coverage,999).toFixed(0)}%</b>。剩下的怎麼補、怎麼安全地用，是可以坐下來聊的事。`;
+  }
 
   el('sbA').textContent = fmtAge(r.ageA);
   el('sbB').textContent = fmtAge(r.ageB);
 }
 
 [['inAge','age',parseInt],['inExp','exp',parseFloat],['inSave','save',parseFloat],
- ['inWealth','wealth',parseFloat],['inHouse','house',parseFloat],['inMortgage','mortgage',parseFloat],['inSal','sal',parseFloat],['inRateA','rateA',parseFloat],['inRateB','rateB',parseFloat]]
+ ['inWealth','wealth',parseFloat],['inHouse','house',parseFloat],['inMortgage','mortgage',parseFloat],['inSal','sal',parseFloat],['inRateA','rateA',parseFloat],['inRateB','rateB',parseFloat],['inMult','mult',parseFloat]]
 .forEach(([id,key,parse])=>{
   el(id).addEventListener('input', e=>{ state[key]=parse(e.target.value); update(); });
 });
