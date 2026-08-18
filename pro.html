@@ -182,7 +182,7 @@ footer p{font-size:.72rem;color:var(--muted);font-weight:300;line-height:1.9;tex
       </div>
       <div class="field">
         <div class="f-head"><div class="f-label">資金成本年利率</div><div class="f-val"><span id="v1Rate"></span><small>%／年</small></div></div>
-        <input type="range" id="i1Rate" min="0.5" max="8" step="0.1" value="2.6">
+        <input type="range" id="i1Rate" min="0.5" max="8" step="0.1" value="3">
       </div>
       <div class="field">
         <div class="f-head"><div class="f-label">攤還方式</div>
@@ -420,7 +420,7 @@ document.querySelectorAll('#tabs .tab').forEach(t=>{
 /* =========================================================
    TAB 1 個人配置（正算／反算）
    ========================================================= */
-const s1 = { dir:'fwd', target:5, asset:1000, ltv:80, lev:2, yield:.7, rate:2.6, mode:'amortize', years:30 };
+const s1 = { dir:'fwd', target:5, asset:1000, ltv:80, lev:2, yield:.7, rate:3, mode:'amortize', years:30 };
 function costPerWan(){ return s1.mode==='amortize' ? annuity(1, s1.rate, s1.years) : s1.rate/100/12; }
 function u1(){
   el('v1Target').textContent=s1.target; el('v1Asset').textContent=fmt(s1.asset);

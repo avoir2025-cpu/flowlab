@@ -172,6 +172,10 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
         <div class="f-head"><div class="f-label">名下房產市值<small>沒有就保持 0</small></div><div class="f-val"><span id="vHouse"></span><small>萬</small></div></div>
         <input type="range" id="inHouse" min="0" max="5000" step="100" value="0">
       </div>
+      <div class="field" id="fMortgage" style="display:none;">
+        <div class="f-head"><div class="f-label">房貸餘額</div><div class="f-val"><span id="vMortgage"></span><small>萬</small></div></div>
+        <input type="range" id="inMortgage" min="0" max="4000" step="50" value="0">
+      </div>
       <div class="field">
         <div class="f-head"><div class="f-label">平均月收入</div><div class="f-val"><span id="vSal"></span><small>萬／月</small></div></div>
         <input type="range" id="inSal" min="2" max="30" step="0.5" value="8">
@@ -250,7 +254,9 @@ const CONFIG = {
 };
 
 const el = id => document.getElementById(id);
-let state = { age:35, exp:5, save:2, wealth:100, house:0, sal:8, rateA:1.7, rateB:0.7 };
+let state = { age:35, exp:5, save:2, wealth:100, house:0, mortgage:0, sal:8, rateA:1.7, rateB:0.7 };
+/* 房貸統一假設：貸 8 成、30 年期、利率 3% */
+const HOUSE = { ltv:0.8, years:30, rate:3.0 };
 
 /* 每月複利累積到目標本金所需月數；到不了回傳 Infinity */
 function monthsToTarget(W, S, r, T){
@@ -292,10 +298,12 @@ function update(){
   el('vSave').textContent = state.save;
   el('vWealth').textContent = state.wealth.toLocaleString('zh-TW');
   el('vHouse').textContent = state.house.toLocaleString('zh-TW');
+  el('vMortgage').textContent = state.mortgage.toLocaleString('zh-TW');
+  el('fMortgage').style.display = state.house>0 ? '' : 'none';
   el('vSal').textContent = state.sal;
   el('vRateA').textContent = state.rateA.toFixed(1);
   el('vRateB').textContent = state.rateB.toFixed(2);
-  ['inAge','inExp','inSave','inWealth','inHouse','inSal','inRateA','inRateB'].forEach(id=>paintRange(el(id)));
+  ['inAge','inExp','inSave','inWealth','inHouse','inMortgage','inSal','inRateA','inRateB'].forEach(id=>paintRange(el(id)));
 
   const r = calc(state);
   el('ageA').textContent = fmtAge(r.ageA);
@@ -318,7 +326,7 @@ function update(){
   el('whyLine').innerHTML = `為什麼差這麼多？傳統路徑要求你把本金存到「利息夠生活」，需要 <b>${fmtCap(r.capA)} 萬</b>；順序路徑是讓每一塊錢先進到會產生現金流的位置，需要的本金只有 <b>${fmtCap(r.capB)} 萬</b>，差了約 <b>${ratio.toFixed(1)} 倍</b>。差別不在你存多少，在錢排隊的順序。`;
 
   const credit = state.sal*22;
-  const houseLoan = state.house*0.8;
+  const houseLoan = Math.max(0, state.house*HOUSE.ltv - state.mortgage);
   const resources = state.wealth + houseLoan + credit;
   const coverage = r.capB>0 ? resources/r.capB*100 : 0;
   const parts = [`可動用資產 <b>${fmtCap(state.wealth)} 萬</b>`];
@@ -334,7 +342,7 @@ function update(){
 }
 
 [['inAge','age',parseInt],['inExp','exp',parseFloat],['inSave','save',parseFloat],
- ['inWealth','wealth',parseFloat],['inHouse','house',parseFloat],['inSal','sal',parseFloat],['inRateA','rateA',parseFloat],['inRateB','rateB',parseFloat]]
+ ['inWealth','wealth',parseFloat],['inHouse','house',parseFloat],['inMortgage','mortgage',parseFloat],['inSal','sal',parseFloat],['inRateA','rateA',parseFloat],['inRateB','rateB',parseFloat]]
 .forEach(([id,key,parse])=>{
   el(id).addEventListener('input', e=>{ state[key]=parse(e.target.value); update(); });
 });
@@ -345,7 +353,7 @@ else{ el('lineBtn').addEventListener('click', e=>{ e.preventDefault(); alert('�
 
 el('copyBtn').addEventListener('click', async ()=>{
   const r = calc(state);
-  const text = `【退休試算結果】\n年齡 ${state.age}｜月開銷 ${state.exp} 萬｜月存 ${state.save} 萬｜可動用資產 ${state.wealth} 萬${state.house>0?`｜房產 ${state.house} 萬`:''}｜月收入 ${state.sal} 萬\n照現在的存法：${fmtAge(r.ageA)}\n換一個順序：${fmtAge(r.ageB)}\n想了解怎麼做到，請跟我聊聊`;
+  const text = `【退休試算結果】\n年齡 ${state.age}｜月開銷 ${state.exp} 萬｜月存 ${state.save} 萬｜可動用資產 ${state.wealth} 萬${state.house>0?`｜房產 ${state.house} 萬（貸款餘額 ${state.mortgage} 萬）`:''}｜月收入 ${state.sal} 萬\n照現在的存法：${fmtAge(r.ageA)}\n換一個順序：${fmtAge(r.ageB)}\n想了解怎麼做到，請跟我聊聊`;
   try{
     await navigator.clipboard.writeText(text);
     el('copyBtn').textContent = '已複製！加好友後直接貼上就可以';
