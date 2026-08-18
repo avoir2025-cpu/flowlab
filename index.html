@@ -169,7 +169,7 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
         <input type="range" id="inWealth" min="0" max="3000" step="50" value="100">
       </div>
       <div class="field">
-        <div class="f-head"><div class="f-label">平均月收入<small>用來估你的信用資源上限</small></div><div class="f-val"><span id="vSal"></span><small>萬／月</small></div></div>
+        <div class="f-head"><div class="f-label">平均月收入</div><div class="f-val"><span id="vSal"></span><small>萬／月</small></div></div>
         <input type="range" id="inSal" min="2" max="30" step="0.5" value="8">
       </div>
     </div>
@@ -192,21 +192,21 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
     <div class="why" id="resLine"></div>
 
     <details class="adv">
-      <summary>試算假設（可自己調整）</summary>
+      <summary>調整試算假設</summary>
       <div class="adv-body">
         <div class="field">
           <div class="f-head"><div class="f-label">傳統路徑：定存年利率</div><div class="f-val"><span id="vRateA"></span><small>%／年</small></div></div>
           <input type="range" id="inRateA" min="0.5" max="3" step="0.1" value="1.7">
         </div>
         <div class="field">
-          <div class="f-head"><div class="f-label">順序路徑：假設月配息率<small>此為假設值，非保證；往下拉看看保守情境</small></div><div class="f-val"><span id="vRateB"></span><small>%／月</small></div></div>
+          <div class="f-head"><div class="f-label">順序路徑：月配息率</div><div class="f-val"><span id="vRateB"></span><small>%／月</small></div></div>
           <input type="range" id="inRateB" min="0.3" max="1" step="0.05" value="0.7">
         </div>
       </div>
     </details>
 
     <div class="honest-strip">
-      本頁為教育性質的情境試算。兩條路徑都是假設值：傳統路徑以定存利率計算，順序路徑以你設定的假設配息率計算，配息並非保證，也可能來自本金。<br>這裡只回答「數學上差多少」，不推薦任何商品。
+      本頁為教育性質的情境試算，所有數字皆為假設值。
     </div>
   </div>
 </section>
@@ -316,8 +316,8 @@ function update(){
   const resources = state.wealth + credit;
   const coverage = r.capB>0 ? resources/r.capB*100 : 0;
   el('resLine').innerHTML = coverage>=100
-    ? `資源盤點（參考）：可動用資產 <b>${fmtCap(state.wealth)} 萬</b>＋信用資源上限約 <b>${fmtCap(credit)} 萬</b>（月收入 × 22 的法定天花板）≒ <b>${fmtCap(resources)} 萬</b>，<b>已足以覆蓋</b>順序路徑需要的本金。差的不是錢，是結構安不安全、順序對不對。`
-    : `資源盤點（參考）：可動用資產 <b>${fmtCap(state.wealth)} 萬</b>＋信用資源上限約 <b>${fmtCap(credit)} 萬</b>（月收入 × 22 的法定天花板）≒ <b>${fmtCap(resources)} 萬</b>，已覆蓋順序路徑所需本金的 <b>${Math.min(coverage,999).toFixed(0)}%</b>。這只是盤點你「有哪些資源」，不代表建議動用；缺口怎麼補、該不該用、安不安全，是要坐下來談清楚的事。`;
+    ? `其實你手上的資源已經夠了：可動用資產 <b>${fmtCap(state.wealth)} 萬</b>＋信用空間約 <b>${fmtCap(credit)} 萬</b>，合計 <b>${fmtCap(resources)} 萬</b>，超過順序路徑需要的本金。差的不是錢，是順序和結構。`
+    : `其實你手上已經有資源：可動用資產 <b>${fmtCap(state.wealth)} 萬</b>＋信用空間約 <b>${fmtCap(credit)} 萬</b>，合計 <b>${fmtCap(resources)} 萬</b>，離順序路徑需要的本金已經走了 <b>${Math.min(coverage,999).toFixed(0)}%</b>。剩下的怎麼補、怎麼安全地用，是可以坐下來聊的事。`;
 
   el('sbA').textContent = fmtAge(r.ageA);
   el('sbB').textContent = fmtAge(r.ageB);
