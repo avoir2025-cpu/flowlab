@@ -191,7 +191,7 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
       <div class="vs-card now">
         <div class="t">照現在的存法</div>
         <div class="age" id="ageA">—</div>
-        <div class="cap">需要存到 <b id="capA">—</b> 萬<br>才能靠利息過生活</div>
+        <div class="cap">需要累積 <b id="capA">—</b> 萬</div>
       </div>
       <div class="vs-mid">vs</div>
       <div class="vs-card alt">
@@ -202,7 +202,6 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
     </div>
     <div class="delta" id="deltaLine"></div>
     <div class="why" id="whyLine"></div>
-    <div class="why" id="resLine"></div>
 
     <div class="honest-strip">
       本頁為教育性質的情境試算，所有數字皆為假設值。
@@ -248,6 +247,8 @@ const el = id => document.getElementById(id);
 let state = { age:35, exp:5, save:2, wealth:100, house:0, mortgage:0, sal:8, rateA:1.7, rateB:0.7, mult:2 };
 /* 房貸統一假設：貸 8 成、30 年期、利率 3% */
 const HOUSE = { ltv:0.8, years:30, rate:3.0 };
+/* 信貸統一假設：額度＝月收入×22、利率 4%；年度轉貸回收本金，穩態下成本視同只計息 */
+const CREDIT = { dbr:22, rate:4.0 };
 /* 本息平均攤還月付金（萬） */
 function annuityM(P, annualRate, years){
   const r=annualRate/100/12, n=years*12;
@@ -282,10 +283,19 @@ function calc(s){
     if(c > 0 && hn > 0){ houseNet = hn; cashOut = c; }
   }
 
-  const capB = Math.max(0, s.exp - houseNet) / (s.rateB/100);   // 房產結構外，還需要的配息本金
+  /* 信貸結構：額度＝月收入×22，×倍數投入；年度轉貸回收本金，穩態成本視同只計息 */
+  let creditNet = 0;
+  {
+    const c = s.sal * CREDIT.dbr;
+    const cn = c * s.mult * (s.rateB/100) - c * CREDIT.rate/100/12;
+    if(cn > 0) creditNet = cn;
+  }
+
+  const structNet = houseNet + creditNet;                        // 結構先到位的每月現金流
+  const capB = Math.max(0, s.exp - structNet) / (s.rateB/100);   // 結構外還需要的配息本金
   const mA = monthsToTarget(s.wealth, s.save, s.rateA/100/12, capA);
-  const mB = monthsToTarget(s.wealth, s.save + houseNet, s.rateB/100, capB);
-  return { capA, capB, houseNet, cashOut, housePay,
+  const mB = monthsToTarget(s.wealth, s.save + structNet, s.rateB/100, capB);
+  return { capA, capB, houseNet, creditNet, structNet, cashOut, housePay,
     ageA: mA === Infinity ? Infinity : s.age + mA/12,
     ageB: mB === Infinity ? Infinity : s.age + mB/12 };
 }
@@ -334,11 +344,11 @@ function update(){
   el('ageA').textContent = fmtAge(r.ageA);
   el('ageB').textContent = fmtAge(r.ageB);
   el('capA').textContent = fmtCap(r.capA);
-  el('capBCap').innerHTML = r.houseNet>0
+  el('capBCap').innerHTML = r.structNet>0
     ? (r.capB>0
-        ? `房產結構每月先貢獻 <b>+${r.houseNet.toFixed(1)} 萬</b><br>再累積 <b>${fmtCap(r.capB)} 萬</b>就到位`
-        : `房產結構的月現金流<br><b>已可支應生活開銷</b>`)
-    : `只需要 <b>${fmtCap(r.capB)} 萬</b><br>讓資產先開始工作`;
+        ? `每月現金流先到位 <b>+${r.structNet.toFixed(1)} 萬</b><br>再累積 <b>${fmtCap(r.capB)} 萬</b>`
+        : `每月現金流 <b>+${r.structNet.toFixed(1)} 萬</b><br>已可支應生活`)
+    : `只需要累積 <b>${fmtCap(r.capB)} 萬</b>`;
 
   let delta = '';
   if(r.ageA === Infinity && r.ageB !== Infinity){
@@ -351,27 +361,7 @@ function update(){
   }
   el('deltaLine').innerHTML = delta;
 
-  if(r.houseNet>0){
-    el('whyLine').innerHTML = r.capB>0
-      ? `為什麼差這麼多？順序路徑先把房產整合：拿回 <b>${fmtCap(r.cashOut)} 萬</b>現金投入配置，配息把整筆房貸月付（${r.housePay.toFixed(1)} 萬）付掉之後，每月還多 <b>+${r.houseNet.toFixed(1)} 萬</b>；剩下的缺口只需要 <b>${fmtCap(r.capB)} 萬</b>本金，比傳統路徑的 <b>${fmtCap(r.capA)} 萬</b>小得多。差別不在你存多少，在錢排隊的順序。`
-      : `為什麼？順序路徑把房產整合後：拿回 <b>${fmtCap(r.cashOut)} 萬</b>現金投入配置，配息付掉整筆房貸月付（${r.housePay.toFixed(1)} 萬）之後每月還多 <b>+${r.houseNet.toFixed(1)} 萬</b>，已經超過你的月開銷。傳統路徑則還需要存到 <b>${fmtCap(r.capA)} 萬</b>。差別不在你存多少，在錢排隊的順序。`;
-  }else{
-    const ratio = r.capB > 0 ? (r.capA/r.capB) : 0;
-    el('whyLine').innerHTML = `為什麼差這麼多？傳統路徑要求你把本金存到「利息夠生活」，需要 <b>${fmtCap(r.capA)} 萬</b>；順序路徑是讓每一塊錢先進到會產生現金流的位置，需要的本金只有 <b>${fmtCap(r.capB)} 萬</b>，差了約 <b>${ratio.toFixed(1)} 倍</b>。差別不在你存多少，在錢排隊的順序。`;
-  }
-
-  const credit = state.sal*22;
-  if(r.houseNet>0){
-    el('resLine').innerHTML = r.capB>0
-      ? `房產已經算進去了，而你還有一張牌沒用：信用空間約 <b>${fmtCap(credit)} 萬</b>（可動用資產 ${fmtCap(state.wealth)} 萬也已計入）。剩下的缺口怎麼補、怎麼安全地走，是可以坐下來聊的事。`
-      : `這個結果只用了你的房產和 <b>${fmtCap(state.wealth)} 萬</b>資產，信用空間約 <b>${fmtCap(credit)} 萬</b>都還沒動。怎麼安全地走到這一步，是可以坐下來聊的事。`;
-  }else{
-    const resources = state.wealth + credit;
-    const coverage = r.capB>0 ? resources/r.capB*100 : 0;
-    el('resLine').innerHTML = coverage>=100
-      ? `其實你手上的資源已經夠了：可動用資產 <b>${fmtCap(state.wealth)} 萬</b>＋信用空間約 <b>${fmtCap(credit)} 萬</b>，合計 <b>${fmtCap(resources)} 萬</b>，超過順序路徑需要的本金。差的不是錢，是順序和結構。`
-      : `其實你手上已經有資源：可動用資產 <b>${fmtCap(state.wealth)} 萬</b>＋信用空間約 <b>${fmtCap(credit)} 萬</b>，合計 <b>${fmtCap(resources)} 萬</b>，離順序路徑需要的本金已經走了 <b>${Math.min(coverage,999).toFixed(0)}%</b>。剩下的怎麼補、怎麼安全地用，是可以坐下來聊的事。`;
-  }
+  el('whyLine').innerHTML = `差別不在你存多少，在錢排隊的順序——試算已把你的資產、信用空間${state.house>0&&r.houseNet>0?'、房產':''}排進會產生現金流的位置。實際怎麼走，加 LINE 聊。`;
 
   el('sbA').textContent = fmtAge(r.ageA);
   el('sbB').textContent = fmtAge(r.ageB);
