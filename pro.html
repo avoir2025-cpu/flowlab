@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>FlowLab Pro｜現金流結構解析（學員・夥伴版）</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230B1220'/%3E%3Cpath d='M20 72 L42 50 L58 60 L80 30' stroke='%23C8A96A' stroke-width='9' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='80' cy='30' r='7' fill='%23E3C98F'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B1220; --bg2:#0E1830; --panel:#121C33;
+  --line:rgba(200,169,106,.18); --line-soft:rgba(255,255,255,.08);
+  --gold:#C8A96A; --gold-bright:#E3C98F;
+  --ink:#F2F0EA; --muted:#93A0B8;
+  --pos:#3DD68C; --neg:#F0716C; --warn:#E8B44A; --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased;}
+.serif{font-family:'Noto Serif TC','Noto Sans TC',serif;}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px;}
+
+header{position:sticky;top:0;z-index:50;background:rgba(11,18,32,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line-soft);}
+.nav{display:flex;align-items:center;justify-content:space-between;height:56px;}
+.logo{font-family:'Noto Serif TC',serif;font-weight:600;font-size:1rem;letter-spacing:.05em;}
+.logo em{font-style:normal;color:var(--gold);}
+.logo .tag{font-size:.66rem;color:var(--muted);border:1px solid var(--line-soft);border-radius:999px;padding:2px 10px;margin-left:10px;vertical-align:2px;letter-spacing:.14em;}
+
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:14px 0 0;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{
+  flex-shrink:0;padding:10px 20px;border-radius:10px 10px 0 0;cursor:pointer;
+  font-size:.9rem;letter-spacing:.06em;color:var(--muted);background:transparent;
+  border:1px solid transparent;border-bottom:none;font-family:inherit;transition:.2s;
+}
+.tab.on{background:var(--panel);border-color:var(--line-soft);color:var(--gold-bright);font-weight:700;}
+.tab-body{display:none;padding:30px 0 70px;}
+.tab-body.on{display:block;}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
+.panel{background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);padding:26px 24px;}
+.panel h3{font-size:.88rem;letter-spacing:.22em;color:var(--gold);font-weight:500;margin-bottom:20px;}
+.panel .h3row{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.panel .h3row h3{margin-bottom:0;}
+.full{grid-column:1 / -1;}
+
+.field{margin-bottom:20px;}
+.f-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;}
+.f-label{font-size:.88rem;letter-spacing:.03em;}
+.f-label small{display:block;font-size:.72rem;color:var(--muted);font-weight:300;}
+.f-val{font-size:.98rem;color:var(--gold-bright);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.f-val small{font-size:.7rem;color:var(--muted);font-weight:400;margin-left:3px;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:rgba(255,255,255,.12);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--gold-bright);border:3px solid #0B1220;box-shadow:0 0 0 1px var(--gold);}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--gold-bright);border:3px solid #0B1220;box-shadow:0 0 0 1px var(--gold);}
+input[type=number]{width:110px;background:var(--bg2);border:1px solid var(--line-soft);border-radius:8px;color:var(--gold-bright);font-weight:700;font-size:.95rem;font-family:inherit;padding:7px 10px;outline:none;text-align:right;}
+input[type=number]:focus{border-color:var(--gold);}
+
+.seg{display:inline-flex;border:1px solid var(--line-soft);border-radius:10px;overflow:hidden;}
+.seg button{padding:8px 18px;background:transparent;border:none;color:var(--muted);font-size:.84rem;font-family:inherit;cursor:pointer;transition:.2s;}
+.seg button.on{background:rgba(200,169,106,.15);color:var(--gold-bright);font-weight:700;}
+
+.res-row{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;border-bottom:1px dashed var(--line-soft);}
+.res-row:last-child{border-bottom:none;}
+.res-row .k{font-size:.86rem;color:var(--muted);font-weight:300;}
+.res-row .v{font-size:.98rem;font-weight:700;font-variant-numeric:tabular-nums;}
+.res-row .v.in{color:var(--pos);}
+.res-row .v.out{color:var(--neg);}
+.res-row .v.gold{color:var(--gold-bright);}
+.big-num{text-align:center;padding:8px 0 16px;border-bottom:1px solid var(--line-soft);margin-bottom:14px;}
+.big-num .lbl{font-size:.8rem;color:var(--muted);letter-spacing:.12em;margin-bottom:2px;}
+.big-num .num{font-family:'Noto Serif TC',serif;font-weight:700;font-size:2.5rem;font-variant-numeric:tabular-nums;line-height:1.25;}
+.big-num .num.pos{color:var(--pos);}
+.big-num .num.neg{color:var(--neg);}
+.big-num .num.gold{color:var(--gold-bright);}
+.big-num .unit{font-size:1rem;color:var(--muted);font-weight:400;margin-left:4px;}
+.note{font-size:.78rem;color:var(--muted);font-weight:300;line-height:1.75;background:var(--bg2);border:1px solid var(--line-soft);border-radius:10px;padding:12px 16px;margin-top:14px;}
+.note b{color:var(--gold-bright);}
+.note.warn{border-color:rgba(232,180,74,.4);}
+.note.danger{border-color:rgba(240,113,108,.45);}
+
+table.yr{width:100%;border-collapse:collapse;font-size:.82rem;font-variant-numeric:tabular-nums;}
+table.yr th{color:var(--muted);font-weight:500;text-align:right;padding:8px 10px;border-bottom:1px solid var(--line-soft);letter-spacing:.04em;white-space:nowrap;}
+table.yr td{text-align:right;padding:7px 10px;border-bottom:1px dashed var(--line-soft);white-space:nowrap;}
+table.yr th:first-child, table.yr td:first-child{text-align:left;}
+table.yr tr:last-child td{border-bottom:none;}
+table.yr td.pos{color:var(--pos);}
+table.yr td.neg{color:var(--neg);}
+table.yr td.gold{color:var(--gold-bright);font-weight:700;}
+.tbl-scroll{overflow-x:auto;}
+
+.lights{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.light{background:var(--bg2);border:1px solid var(--line-soft);border-radius:12px;padding:18px 16px;text-align:center;}
+.light .dot{width:14px;height:14px;border-radius:50%;margin:0 auto 10px;}
+.light.g .dot{background:var(--pos);box-shadow:0 0 12px rgba(61,214,140,.5);}
+.light.y .dot{background:var(--warn);box-shadow:0 0 12px rgba(232,180,74,.5);}
+.light.r .dot{background:var(--neg);box-shadow:0 0 12px rgba(240,113,108,.5);}
+.light .t{font-size:.8rem;color:var(--muted);letter-spacing:.06em;margin-bottom:4px;}
+.light .n{font-size:1.3rem;font-weight:700;font-variant-numeric:tabular-nums;}
+.light .s{font-size:.72rem;color:var(--muted);margin-top:4px;line-height:1.6;}
+.light.g .n{color:var(--pos);} .light.y .n{color:var(--warn);} .light.r .n{color:var(--neg);}
+
+#chartLoop{width:100%;height:auto;display:block;}
+.legend{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;}
+.legend span{font-size:.74rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.dot2{width:10px;height:10px;border-radius:50%;display:inline-block;}
+
+footer{border-top:1px solid var(--line-soft);padding:26px 0 34px;background:var(--bg2);}
+footer p{font-size:.72rem;color:var(--muted);font-weight:300;line-height:1.9;text-align:center;max-width:860px;margin:0 auto;}
+
+/* gate */
+#gate{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;padding:20px;}
+#gate.on{display:flex;}
+#gate .g-logo{font-family:'Noto Serif TC',serif;font-size:1.3rem;letter-spacing:.08em;}
+#gate .g-logo em{font-style:normal;color:var(--gold);}
+#gate input{background:var(--bg2);border:1px solid var(--line-soft);border-radius:10px;color:var(--ink);font-size:1rem;font-family:inherit;padding:12px 18px;outline:none;text-align:center;letter-spacing:.3em;width:240px;}
+#gate input:focus{border-color:var(--gold);}
+#gate .g-err{font-size:.8rem;color:var(--neg);min-height:1.4em;}
+
+@media (max-width:860px){
+  .grid2{grid-template-columns:1fr;}
+  .lights{grid-template-columns:1fr;}
+  .panel{padding:22px 18px;}
+}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="g-logo"><em>FlowLab</em> Pro</div>
+  <input type="password" id="gateInput" placeholder="通行碼" autocomplete="off">
+  <div class="g-err" id="gateErr"></div>
+</div>
+
+<header>
+  <div class="wrap">
+    <div class="nav">
+      <div class="logo"><em>FlowLab</em> Pro<span class="tag">學員・夥伴 觀念解析</span></div>
+    </div>
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-tab="t1">個人配置</button>
+      <button class="tab" data-tab="t2">槓桿迴圈</button>
+      <button class="tab" data-tab="t3">收益養專案</button>
+      <button class="tab" data-tab="t4">入場檢核</button>
+    </div>
+  </div>
+</header>
+
+<!-- ================= TAB 1 個人配置 ================= -->
+<div class="tab-body on wrap" id="t1">
+  <div class="grid2">
+    <div class="panel">
+      <div class="h3row">
+        <h3>條件設定</h3>
+        <div class="seg" id="dirSeg">
+          <button data-dir="fwd" class="on">正算</button>
+          <button data-dir="rev">反算</button>
+        </div>
+      </div>
+
+      <div class="field" id="f1Target" style="display:none;">
+        <div class="f-head"><div class="f-label">目標每月淨現金流</div><div class="f-val"><span id="v1Target"></span><small>萬／月</small></div></div>
+        <input type="range" id="i1Target" min="1" max="30" step="0.5" value="5">
+      </div>
+      <div class="field" id="f1Asset">
+        <div class="f-head"><div class="f-label">資產價值</div><div class="f-val"><span id="v1Asset"></span><small>萬</small></div></div>
+        <input type="range" id="i1Asset" min="100" max="5000" step="50" value="1000">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">可動用成數</div><div class="f-val"><span id="v1Ltv"></span><small>%</small></div></div>
+        <input type="range" id="i1Ltv" min="10" max="100" step="5" value="80">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">投入倍數<small>投入金額 ÷ 可動用資金</small></div><div class="f-val">×<span id="v1Lev"></span></div></div>
+        <input type="range" id="i1Lev" min="1" max="2" step="0.1" value="2">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">假設月配息率<small>年化 <span id="v1YieldYr"></span>%</small></div><div class="f-val"><span id="v1Yield"></span><small>%／月</small></div></div>
+        <input type="range" id="i1Yield" min="0.1" max="1.2" step="0.05" value="0.7">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">資金成本年利率</div><div class="f-val"><span id="v1Rate"></span><small>%／年</small></div></div>
+        <input type="range" id="i1Rate" min="0.5" max="8" step="0.1" value="2.6">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">攤還方式</div>
+          <div class="seg" id="modeSeg">
+            <button data-mode="amortize" class="on">本息攤還</button>
+            <button data-mode="interest">只計息</button>
+          </div>
+        </div>
+      </div>
+      <div class="field" id="f1Years">
+        <div class="f-head"><div class="f-label">攤還年期</div><div class="f-val"><span id="v1Years"></span><small>年</small></div></div>
+        <input type="range" id="i1Years" min="10" max="40" step="5" value="30">
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3 id="r1Title">試算結果</h3>
+      <div class="big-num">
+        <div class="lbl" id="r1BigLbl">每月淨現金流</div>
+        <div class="num" id="r1Big">—</div>
+      </div>
+      <div id="r1Rows"></div>
+      <div class="note" id="r1Note"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TAB 2 槓桿迴圈 ================= -->
+<div class="tab-body wrap" id="t2">
+  <div class="grid2">
+    <div class="panel">
+      <h3>結構條件</h3>
+      <div class="field">
+        <div class="f-head"><div class="f-label">外部貸款金額<small>啟動用的自備資金來源</small></div><div class="f-val"><span id="v2L"></span><small>萬</small></div></div>
+        <input type="range" id="i2L" min="100" max="2000" step="50" value="500">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">外部貸款利率</div><div class="f-val"><span id="v2rL"></span><small>%／年</small></div></div>
+        <input type="range" id="i2rL" min="1.5" max="8" step="0.1" value="4">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">外部貸款年期</div><div class="f-val"><span id="v2y"></span><small>年</small></div></div>
+        <input type="range" id="i2y" min="3" max="30" step="1" value="7">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">資產質借成數<small>決定資產放大倍數＝1÷(1−成數)</small></div><div class="f-val"><span id="v2b"></span><small>%</small></div></div>
+        <input type="range" id="i2b" min="0" max="70" step="5" value="50">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">質借利率<small>只計息，年繳一次（次年支付）</small></div><div class="f-val"><span id="v2rB"></span><small>%／年</small></div></div>
+        <input type="range" id="i2rB" min="1.5" max="6" step="0.02" value="2.86">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">假設月配息率</div><div class="f-val"><span id="v2ym"></span><small>%／月</small></div></div>
+        <input type="range" id="i2ym" min="0.3" max="1" step="0.05" value="0.7">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">年度轉貸回收本金，再投入</div>
+          <div class="seg" id="recSeg">
+            <button data-rec="1" class="on">開</button>
+            <button data-rec="0">關</button>
+          </div>
+        </div>
+      </div>
+      <div class="note warn">轉貸是審批不是權利：聯徵次數、DBR 額度、銀行政策都會影響。模擬開啟時等於假設每年都轉貸成功，理解這個模型時要把這個前提放在心上。</div>
+    </div>
+
+    <div class="panel">
+      <h3>第一年・兩本帳對照</h3>
+      <div class="grid2" style="gap:12px;">
+        <div class="big-num" style="border-bottom:none;margin-bottom:0;">
+          <div class="lbl">現金時序帳（月）</div>
+          <div class="num" id="r2Cash" style="font-size:1.9rem;">—</div>
+          <div class="lbl" style="margin-top:2px;">質借利息次年才付</div>
+        </div>
+        <div class="big-num" style="border-bottom:none;margin-bottom:0;">
+          <div class="lbl">攤提帳（月）</div>
+          <div class="num" id="r2Accr" style="font-size:1.9rem;">—</div>
+          <div class="lbl" style="margin-top:2px;">利息折算進每月</div>
+        </div>
+      </div>
+      <div id="r2Rows" style="margin-top:10px;"></div>
+      <div class="note" id="r2Note"></div>
+      <div class="note danger" id="r2Risk"></div>
+    </div>
+
+    <div class="panel full">
+      <h3>十年迴圈模擬</h3>
+      <svg id="chartLoop" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="legend">
+        <span><span class="dot2" style="background:var(--gold)"></span>資產規模</span>
+        <span><span class="dot2" style="background:var(--neg)"></span>總負債（外部貸款＋質借）</span>
+        <span><span class="dot2" style="background:var(--pos)"></span>淨資產</span>
+      </div>
+    </div>
+
+    <div class="panel full">
+      <h3>逐年明細（萬）</h3>
+      <div class="tbl-scroll">
+        <table class="yr" id="yrTable"></table>
+      </div>
+      <div class="note">「年度淨現金」＝配息收入−貸款攤還−質借利息＋轉貸回收本金；轉貸開啟時，正的年度淨現金會於次年再投入，依質借成數放大為新資產。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TAB 3 收益養專案 ================= -->
+<div class="tab-body wrap" id="t3">
+  <div class="grid2">
+    <div class="panel">
+      <h3>專案條件</h3>
+      <div class="field">
+        <div class="f-head"><div class="f-label">每月支出義務<small>工程款、營運款等固定月支出</small></div><div class="f-val"><span id="v3M"></span><small>萬／月</small></div></div>
+        <input type="range" id="i3M" min="5" max="300" step="5" value="50">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">前期一次性支出<small>土地款等塊狀支出，直接進現金層</small></div><div class="f-val"><span id="v3U"></span><small>萬</small></div></div>
+        <input type="range" id="i3U" min="0" max="10000" step="100" value="0">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">假設月配息率</div><div class="f-val"><span id="v3ym"></span><small>%／月</small></div></div>
+        <input type="range" id="i3ym" min="0.3" max="1" step="0.05" value="0.7">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">支出佔收益比<small>endowment 鐵律：別貼滿收益</small></div><div class="f-val"><span id="v3sp"></span><small>%</small></div></div>
+        <input type="range" id="i3sp" min="50" max="100" step="5" value="70">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">現金水位<small>近期支出放現金層，不吃配息</small></div><div class="f-val"><span id="v3k"></span><small>個月</small></div></div>
+        <input type="range" id="i3k" min="0" max="12" step="1" value="6">
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>資本結構</h3>
+      <div class="big-num">
+        <div class="lbl">需要的收益池規模</div>
+        <div class="num gold" id="r3Pool">—</div>
+      </div>
+      <div id="r3Rows"></div>
+      <div class="note" id="r3Stress"></div>
+      <div class="note">三條鐵律：收益池規模≒月支出的 143 倍（0.7% 時）；支出與配息的時間形狀不同，近期款項走現金層；支出別貼滿收益，留緩衝滾回本金。這一頁的正確講法是「本金不動，用收益養專案」，成本沒有消失，是由收益支付。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TAB 4 入場檢核 ================= -->
+<div class="tab-body wrap" id="t4">
+  <div class="grid2">
+    <div class="panel">
+      <h3>財務現況</h3>
+      <div class="field">
+        <div class="f-head"><div class="f-label">平均月收入</div><div class="f-val"><input type="number" id="i4I" value="8" min="0" step="0.5"><small>萬</small></div></div>
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">無擔保負債總額<small>信貸、卡循等</small></div><div class="f-val"><input type="number" id="i4U" value="0" min="0" step="10"><small>萬</small></div></div>
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">每月負債攤還總額</div><div class="f-val"><input type="number" id="i4D" value="2" min="0" step="0.1"><small>萬</small></div></div>
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">總資產</div><div class="f-val"><input type="number" id="i4TA" value="1200" min="0" step="50"><small>萬</small></div></div>
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">總負債</div><div class="f-val"><input type="number" id="i4TL" value="300" min="0" step="50"><small>萬</small></div></div>
+      </div>
+      <div class="note">三條規則：無擔保負債 ≤ 月薪 22 倍（DBR22）；月負債收支比，信貸 &lt;70%、房貸建議 &lt;60%；總負債 ÷ 總資產 &lt;60%。</div>
+    </div>
+
+    <div class="panel">
+      <h3>入場資格檢核</h3>
+      <div class="lights" id="lights"></div>
+      <div id="r4Rows" style="margin-top:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>本頁為課程學員與合作夥伴的觀念釐清、結構解析工具，所有數字均為假設值，僅供理解現金流結構之用，不構成任何金融商品之推薦、要約或報酬保證，亦非任何專業建議之替代。請勿公開散布本頁連結。</p>
+</footer>
+
+<script>
+/* ====== CONFIG ====== */
+const CONFIG = {
+  ACCESS_CODE: '',   // 設定通行碼後，開頁需輸入才能進入（純前端防路人，不是資安層級）
+};
+
+const el = id => document.getElementById(id);
+const fmt = x => { const v = Math.round(x*10)/10; return v.toLocaleString('zh-TW',{maximumFractionDigits:1}); };
+const sign = x => (x>=0?'+':'−') + fmt(Math.abs(x));
+
+function paintAll(scope){
+  (scope||document).querySelectorAll('input[type=range]').forEach(input=>{
+    const min=+input.min, max=+input.max, v=+input.value;
+    const p = max>min ? (v-min)/(max-min)*100 : 0;
+    input.style.background = `linear-gradient(90deg, var(--gold) 0%, var(--gold) ${p}%, rgba(255,255,255,.12) ${p}%)`;
+  });
+}
+function annuity(P, annualRate, years){
+  const r=annualRate/100/12, n=years*12;
+  if(P<=0) return 0;
+  if(r===0) return P/n;
+  const f=Math.pow(1+r,n);
+  return P*r*f/(f-1);
+}
+
+/* ====== gate ====== */
+if(CONFIG.ACCESS_CODE && sessionStorage.getItem('flowlab_pro_ok')!=='1'){
+  el('gate').classList.add('on');
+  el('gateInput').addEventListener('keydown', e=>{
+    if(e.key!=='Enter') return;
+    if(e.target.value===CONFIG.ACCESS_CODE){
+      sessionStorage.setItem('flowlab_pro_ok','1');
+      el('gate').classList.remove('on');
+    }else{ el('gateErr').textContent='通行碼不正確'; e.target.value=''; }
+  });
+}
+
+/* ====== tabs ====== */
+document.querySelectorAll('#tabs .tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('on', x===t));
+    document.querySelectorAll('.tab-body').forEach(b=>b.classList.toggle('on', b.id===t.dataset.tab));
+  });
+});
+
+/* =========================================================
+   TAB 1 個人配置（正算／反算）
+   ========================================================= */
+const s1 = { dir:'fwd', target:5, asset:1000, ltv:80, lev:2, yield:.7, rate:2.6, mode:'amortize', years:30 };
+function costPerWan(){ return s1.mode==='amortize' ? annuity(1, s1.rate, s1.years) : s1.rate/100/12; }
+function u1(){
+  el('v1Target').textContent=s1.target; el('v1Asset').textContent=fmt(s1.asset);
+  el('v1Ltv').textContent=s1.ltv; el('v1Lev').textContent=s1.lev.toFixed(1);
+  el('v1Yield').textContent=s1.yield.toFixed(2); el('v1YieldYr').textContent=(s1.yield*12).toFixed(1);
+  el('v1Rate').textContent=s1.rate.toFixed(1); el('v1Years').textContent=s1.years;
+  el('f1Years').style.display = s1.mode==='amortize'?'':'none';
+  el('f1Target').style.display = s1.dir==='rev'?'':'none';
+  el('f1Asset').style.display = s1.dir==='rev'?'none':'';
+  paintAll(el('t1'));
+
+  const cpw = costPerWan();
+  const spread = s1.lev*s1.yield/100 - cpw;   // 每萬可動用資金的月淨貢獻
+  if(s1.dir==='fwd'){
+    const loan=s1.asset*s1.ltv/100, invest=loan*s1.lev;
+    const income=invest*s1.yield/100, cost=loan*cpw, net=income-cost;
+    el('r1BigLbl').textContent='每月淨現金流';
+    el('r1Big').textContent=''; el('r1Big').className='num '+(net>=0?'pos':'neg');
+    el('r1Big').innerHTML=sign(net)+'<span class="unit">萬／月</span>';
+    el('r1Rows').innerHTML=`
+      <div class="res-row"><span class="k">可動用資金</span><span class="v">${fmt(loan)} 萬</span></div>
+      <div class="res-row"><span class="k">投入金額</span><span class="v">${fmt(invest)} 萬</span></div>
+      <div class="res-row"><span class="k">每月現金流入（假設配息）</span><span class="v in">+${fmt(income)} 萬</span></div>
+      <div class="res-row"><span class="k">每月資金成本</span><span class="v out">−${fmt(cost)} 萬</span></div>
+      <div class="res-row"><span class="k">損益兩平配息率</span><span class="v gold">${invest>0?(cost/invest*100).toFixed(2):'—'}%／月</span></div>`;
+    el('r1Note').innerHTML=`配息下修 20% 時淨現金流為 <b>${sign(invest*s1.yield*0.8/100-cost)} 萬</b>；配息中止時為 <b>${sign(-cost)} 萬</b>。`;
+  }else{
+    el('r1BigLbl').textContent='需要的資產規模';
+    if(spread<=0){
+      el('r1Big').className='num neg'; el('r1Big').textContent='不可行';
+      el('r1Rows').innerHTML='';
+      el('r1Note').innerHTML='目前的假設下，配息貢獻低於資金成本，任何規模都無法達標。調高配息假設、拉長年期或降低資金成本後再看。';
+    }else{
+      const loan=s1.target/spread, asset=loan/(s1.ltv/100), invest=loan*s1.lev;
+      el('r1Big').className='num gold';
+      el('r1Big').innerHTML=fmt(asset)+'<span class="unit">萬</span>';
+      el('r1Rows').innerHTML=`
+        <div class="res-row"><span class="k">目標每月淨現金流</span><span class="v in">+${fmt(s1.target)} 萬</span></div>
+        <div class="res-row"><span class="k">需要可動用資金</span><span class="v">${fmt(loan)} 萬</span></div>
+        <div class="res-row"><span class="k">對應投入金額</span><span class="v">${fmt(invest)} 萬</span></div>
+        <div class="res-row"><span class="k">每月資金成本</span><span class="v out">−${fmt(loan*cpw)} 萬</span></div>`;
+      el('r1Note').innerHTML=`這 <b>${fmt(loan)} 萬</b>可動用資金，可由儲蓄、資產套現、資產貸款、信用額度組合而成，組合方式與入場資格請搭配「入場檢核」分頁。`;
+    }
+  }
+}
+[['i1Target','target'],['i1Asset','asset'],['i1Ltv','ltv'],['i1Lev','lev'],['i1Yield','yield'],['i1Rate','rate'],['i1Years','years']]
+.forEach(([id,k])=>el(id).addEventListener('input',e=>{s1[k]=parseFloat(e.target.value);u1();}));
+document.querySelectorAll('#modeSeg button').forEach(b=>b.addEventListener('click',()=>{
+  s1.mode=b.dataset.mode;
+  document.querySelectorAll('#modeSeg button').forEach(x=>x.classList.toggle('on',x===b)); u1();
+}));
+document.querySelectorAll('#dirSeg button').forEach(b=>b.addEventListener('click',()=>{
+  s1.dir=b.dataset.dir;
+  document.querySelectorAll('#dirSeg button').forEach(x=>x.classList.toggle('on',x===b)); u1();
+}));
+
+/* =========================================================
+   TAB 2 槓桿迴圈
+   ========================================================= */
+const s2 = { L:500, rL:4, y:7, b:50, rB:2.86, ym:.7, rec:true };
+function simLoop(){
+  const mult = 1/(1-s2.b/100);
+  let A = s2.L*mult, B = A*s2.b/100;
+  let bal = s2.L, cash = 0, pendingInterest = 0;
+  const pay = annuity(s2.L, s2.rL, s2.y);
+  const rows=[{yr:0,A,B,bal,income:0,loanPay:0,intB:0,recycle:0,net:0,cashEnd:0}];
+  for(let yr=1; yr<=10; yr++){
+    let income=A*s2.ym*12/100, loanPay=0, principal=0;
+    let b2=bal;
+    for(let m=0;m<12;m++){
+      if(b2<=0) break;
+      const i=b2*s2.rL/100/12;
+      const p=Math.min(pay-i, b2);
+      b2-=p; principal+=p; loanPay+=i+p;
+    }
+    bal=b2;
+    const intB = pendingInterest;          // 去年質借利息，今年付
+    pendingInterest = B*s2.rB/100;         // 今年的，明年付
+    let recycle=0;
+    if(s2.rec && principal>0){ recycle=principal; bal=Math.min(bal+principal, s2.L); }
+    const net = income - loanPay - intB + recycle;
+    cash += net;
+    if(s2.rec && cash>0){
+      const dA = cash*mult;
+      A+=dA; B+=dA*s2.b/100; cash=0;
+    }
+    rows.push({yr,A,B,bal,income,loanPay,intB,recycle,net,cashEnd:cash});
+  }
+  return {rows, pay, A0:s2.L*(1/(1-s2.b/100))};
+}
+function u2(){
+  el('v2L').textContent=fmt(s2.L); el('v2rL').textContent=s2.rL.toFixed(1);
+  el('v2y').textContent=s2.y; el('v2b').textContent=s2.b;
+  el('v2rB').textContent=s2.rB.toFixed(2); el('v2ym').textContent=s2.ym.toFixed(2);
+  paintAll(el('t2'));
+
+  const {rows, pay, A0} = simLoop();
+  const B0=A0*s2.b/100;
+  const mIncome=A0*s2.ym/100;
+  const cashMonthly=mIncome-pay;
+  const accrMonthly=cashMonthly - B0*s2.rB/100/12;
+  const c=el('r2Cash'); c.innerHTML=sign(cashMonthly)+'<span class="unit" style="font-size:.85rem;">萬</span>'; c.className='num '+(cashMonthly>=0?'pos':'neg');
+  const a=el('r2Accr'); a.innerHTML=sign(accrMonthly)+'<span class="unit" style="font-size:.85rem;">萬</span>'; a.className='num '+(accrMonthly>=0?'pos':'neg');
+
+  el('r2Rows').innerHTML=`
+    <div class="res-row"><span class="k">啟動資產規模（倍數 ×${(1/(1-s2.b/100)).toFixed(2)}）</span><span class="v">${fmt(A0)} 萬</span></div>
+    <div class="res-row"><span class="k">質借餘額</span><span class="v">${fmt(B0)} 萬</span></div>
+    <div class="res-row"><span class="k">每月配息（假設）</span><span class="v in">+${fmt(mIncome)} 萬</span></div>
+    <div class="res-row"><span class="k">每月貸款攤還</span><span class="v out">−${fmt(pay)} 萬</span></div>
+    <div class="res-row"><span class="k">質借利息（年繳）</span><span class="v out">−${fmt(B0*s2.rB/100)} 萬／年</span></div>`;
+  const last=rows[rows.length-1];
+  el('r2Note').innerHTML=`十年後（假設不變、每年轉貸成功）：資產規模 <b>${fmt(last.A)} 萬</b>、月配息 <b>${fmt(last.A*s2.ym/100)} 萬</b>、總負債 <b>${fmt(last.B+last.bal)} 萬</b>、淨資產 <b>${fmt(last.A-last.B-last.bal)} 萬</b>。`;
+  const dropToCall = s2.b>0 ? (1 - s2.b/100/0.9)*100 : 100;
+  el('r2Risk').innerHTML=`風險線：質借維持率假設 90% 為警戒，目前成數 ${s2.b}%，資產淨值下跌約 <b>${dropToCall.toFixed(0)}%</b> 即觸及警戒線（配息吃本金會加速逼近）。理解整個結構時，這一條是最重要的底線。`;
+
+  /* 表格 */
+  let h='<tr><th>年</th><th>資產規模</th><th>質借餘額</th><th>貸款餘額</th><th>年配息</th><th>貸款攤還</th><th>質借利息</th><th>轉貸回收</th><th>年度淨現金</th><th>月配息</th></tr>';
+  rows.forEach(r=>{
+    h+=`<tr><td>${r.yr}</td><td class="gold">${fmt(r.A)}</td><td>${fmt(r.B)}</td><td>${fmt(r.bal)}</td>
+      <td class="pos">${r.yr?'+'+fmt(r.income):'—'}</td><td class="neg">${r.yr?'−'+fmt(r.loanPay):'—'}</td>
+      <td class="neg">${r.yr?'−'+fmt(r.intB):'—'}</td><td>${r.yr&&r.recycle?'+'+fmt(r.recycle):'—'}</td>
+      <td class="${r.net>=0?'pos':'neg'}">${r.yr?sign(r.net):'—'}</td><td class="gold">${fmt(r.A*s2.ym/100)}</td></tr>`;
+  });
+  el('yrTable').innerHTML=h;
+
+  /* 圖 */
+  const svg=el('chartLoop');
+  const W=900,H=300,pl=60,pr=20,pt=16,pb=30;
+  const series=[
+    {c:'#C8A96A', v:rows.map(r=>r.A)},
+    {c:'#F0716C', v:rows.map(r=>r.B+r.bal)},
+    {c:'#3DD68C', v:rows.map(r=>r.A-r.B-r.bal)},
+  ];
+  const all=series.flatMap(s=>s.v);
+  let yMin=Math.min(0,...all), yMax=Math.max(...all);
+  const padY=(yMax-yMin)*.1||1; yMin-=padY; yMax+=padY;
+  const X=i=>pl+i/10*(W-pl-pr), Y=v=>pt+(yMax-v)/(yMax-yMin)*(H-pt-pb);
+  let out='';
+  for(let i=0;i<=4;i++){
+    const yv=yMin+(yMax-yMin)*i/4, yy=Y(yv);
+    out+=`<line x1="${pl}" y1="${yy}" x2="${W-pr}" y2="${yy}" stroke="rgba(255,255,255,.05)"/>`;
+    out+=`<text x="${pl-8}" y="${yy+4}" fill="#93A0B8" font-size="10" text-anchor="end">${fmt(yv)}</text>`;
+  }
+  for(let i=0;i<=10;i++) out+=`<text x="${X(i)}" y="${H-8}" fill="#93A0B8" font-size="10" text-anchor="middle">${i}年</text>`;
+  series.forEach(sr=>{
+    const p=sr.v.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+    out+=`<path d="${p}" fill="none" stroke="${sr.c}" stroke-width="2.5" stroke-linecap="round"/>`;
+    out+=`<circle cx="${X(10)}" cy="${Y(sr.v[10])}" r="4" fill="${sr.c}"/>`;
+  });
+  svg.innerHTML=out;
+}
+[['i2L','L'],['i2rL','rL'],['i2y','y'],['i2b','b'],['i2rB','rB'],['i2ym','ym']]
+.forEach(([id,k])=>el(id).addEventListener('input',e=>{s2[k]=parseFloat(e.target.value);u2();}));
+document.querySelectorAll('#recSeg button').forEach(b=>b.addEventListener('click',()=>{
+  s2.rec=b.dataset.rec==='1';
+  document.querySelectorAll('#recSeg button').forEach(x=>x.classList.toggle('on',x===b)); u2();
+}));
+
+/* =========================================================
+   TAB 3 收益養專案
+   ========================================================= */
+const s3 = { M:50, U:0, ym:.7, sp:70, k:6 };
+function u3(){
+  el('v3M').textContent=fmt(s3.M); el('v3U').textContent=fmt(s3.U);
+  el('v3ym').textContent=s3.ym.toFixed(2); el('v3sp').textContent=s3.sp; el('v3k').textContent=s3.k;
+  paintAll(el('t3'));
+  const poolRaw = s3.M/(s3.ym/100);
+  const pool = poolRaw/(s3.sp/100);
+  const cashLayer = s3.M*s3.k + s3.U;
+  el('r3Pool').innerHTML=fmt(pool)+'<span class="unit">萬</span>';
+  el('r3Rows').innerHTML=`
+    <div class="res-row"><span class="k">月收益（假設 ${s3.ym.toFixed(2)}%）</span><span class="v in">+${fmt(pool*s3.ym/100)} 萬</span></div>
+    <div class="res-row"><span class="k">月支出義務</span><span class="v out">−${fmt(s3.M)} 萬</span></div>
+    <div class="res-row"><span class="k">每月滾回本金的緩衝</span><span class="v gold">+${fmt(pool*s3.ym/100-s3.M)} 萬</span></div>
+    <div class="res-row"><span class="k">現金層（${s3.k} 個月支出＋一次性）</span><span class="v">${fmt(cashLayer)} 萬</span></div>
+    <div class="res-row"><span class="k">總啟動資金</span><span class="v gold">${fmt(pool+cashLayer)} 萬</span></div>`;
+  const cover = s3.M>0 ? cashLayer/s3.M : 0;
+  const cls = cover>=6 ? '' : (cover>=3 ? 'warn' : 'danger');
+  el('r3Stress').className='note '+cls;
+  el('r3Stress').innerHTML=`斷息壓力測試：配息完全中止時，現金層可撐 <b>${Math.floor(cover)} 個月</b>。${cover>=6?'水位健康。':cover>=3?'偏緊，建議拉高現金水位。':'不足，工程不能暫停，這個水位撐不住一次波動。'}`;
+}
+[['i3M','M'],['i3U','U'],['i3ym','ym'],['i3sp','sp'],['i3k','k']]
+.forEach(([id,k])=>el(id).addEventListener('input',e=>{s3[k]=parseFloat(e.target.value);u3();}));
+
+/* =========================================================
+   TAB 4 入場檢核
+   ========================================================= */
+function u4(){
+  const I=+el('i4I').value||0, U=+el('i4U').value||0, D=+el('i4D').value||0;
+  const TA=+el('i4TA').value||0, TL=+el('i4TL').value||0;
+  const dbr = I>0 ? U/I : Infinity;
+  const dsr = I>0 ? D/I*100 : Infinity;
+  const dar = TA>0 ? TL/TA*100 : (TL>0?Infinity:0);
+  const grade=(v,limit)=> v<=limit*0.8 ? 'g' : (v<=limit ? 'y' : 'r');
+  const items=[
+    {t:'DBR（無擔保 ÷ 月薪）', v:dbr, limit:22, show:isFinite(dbr)?dbr.toFixed(1)+' 倍':'—', sub:'上限 22 倍'},
+    {t:'月負債收支比', v:dsr, limit:70, show:isFinite(dsr)?dsr.toFixed(0)+'%':'—', sub:'信貸 <70%，房貸建議 <60%'},
+    {t:'總負債比', v:dar, limit:60, show:isFinite(dar)?dar.toFixed(0)+'%':'—', sub:'總負債 ÷ 總資產 <60%'},
+  ];
+  el('lights').innerHTML=items.map(it=>`
+    <div class="light ${grade(it.v,it.limit)}"><div class="dot"></div>
+      <div class="t">${it.t}</div><div class="n">${it.show}</div><div class="s">${it.sub}</div></div>`).join('');
+  const roomU=Math.max(0, 22*I-U), roomD=Math.max(0, 0.7*I-D), roomD6=Math.max(0, 0.6*I-D);
+  el('r4Rows').innerHTML=`
+    <div class="res-row"><span class="k">無擔保額度剩餘空間</span><span class="v gold">${fmt(roomU)} 萬</span></div>
+    <div class="res-row"><span class="k">可承受新增月攤還（信貸 70% 線）</span><span class="v gold">${fmt(roomD)} 萬／月</span></div>
+    <div class="res-row"><span class="k">可承受新增月攤還（房貸 60% 線）</span><span class="v gold">${fmt(roomD6)} 萬／月</span></div>`;
+}
+['i4I','i4U','i4D','i4TA','i4TL'].forEach(id=>el(id).addEventListener('input',u4));
+
+/* init */
+u1(); u2(); u3(); u4();
+</script>
+</body>
+</html>
