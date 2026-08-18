@@ -65,6 +65,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--gold-bright);border:3px solid #0B1220;box-shadow:0 0 0 1px var(--gold);}
 .warn-note{display:none;font-size:.78rem;color:var(--neg);background:rgba(240,113,108,.08);border:1px solid rgba(240,113,108,.35);border-radius:8px;padding:8px 12px;margin-top:10px;line-height:1.6;}
 .warn-note.show{display:block;}
+#saveWarn{color:var(--gold-bright);background:rgba(200,169,106,.08);border-color:var(--line);}
 
 /* results */
 .vs-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch;margin-top:22px;}
@@ -203,24 +204,6 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
     <div class="why" id="whyLine"></div>
     <div class="why" id="resLine"></div>
 
-    <details class="adv">
-      <summary>調整試算假設</summary>
-      <div class="adv-body">
-        <div class="field">
-          <div class="f-head"><div class="f-label">傳統路徑：定存年利率</div><div class="f-val"><span id="vRateA"></span><small>%／年</small></div></div>
-          <input type="range" id="inRateA" min="0.5" max="3" step="0.1" value="1.7">
-        </div>
-        <div class="field">
-          <div class="f-head"><div class="f-label">順序路徑：月配息率</div><div class="f-val"><span id="vRateB"></span><small>%／月</small></div></div>
-          <input type="range" id="inRateB" min="0.3" max="1" step="0.05" value="0.7">
-        </div>
-        <div class="field">
-          <div class="f-head"><div class="f-label">順序路徑：資金運用倍數</div><div class="f-val">×<span id="vMult"></span></div></div>
-          <input type="range" id="inMult" min="1" max="2" step="0.1" value="2">
-        </div>
-      </div>
-    </details>
-
     <div class="honest-strip">
       本頁為教育性質的情境試算，所有數字皆為假設值。
     </div>
@@ -329,14 +312,10 @@ function update(){
   el('vMortgage').textContent = state.mortgage.toLocaleString('zh-TW');
   el('fMortgage').style.display = state.house>0 ? '' : 'none';
   el('vSal').textContent = state.sal;
-  el('vRateA').textContent = state.rateA.toFixed(1);
-  el('vRateB').textContent = state.rateB.toFixed(2);
-  el('vMult').textContent = state.mult.toFixed(1);
-
   const room = state.sal - state.exp;
   const sw = el('saveWarn');
   if(room < state.save){
-    sw.textContent = `月收入 ${state.sal} 萬 − 開銷 ${state.exp} 萬 = ${room.toFixed(1)} 萬，低於你填的每月儲蓄 ${state.save} 萬，數字對不上，請調整其中一項。`;
+    sw.textContent = `目前的月收入 ${state.sal} 萬，和理想生活（月開銷 ${state.exp} 萬＋儲蓄 ${state.save} 萬）之間有落差。這個落差，正是需要讓資產開始工作的原因。`;
     sw.classList.add('show');
   }else{
     sw.classList.remove('show');
@@ -349,7 +328,7 @@ function update(){
   }else{
     mw.classList.remove('show');
   }
-  ['inAge','inExp','inSave','inWealth','inHouse','inMortgage','inSal','inRateA','inRateB','inMult'].forEach(id=>paintRange(el(id)));
+  ['inAge','inExp','inSave','inWealth','inHouse','inMortgage','inSal'].forEach(id=>paintRange(el(id)));
 
   const r = calc(state);
   el('ageA').textContent = fmtAge(r.ageA);
@@ -399,7 +378,7 @@ function update(){
 }
 
 [['inAge','age',parseInt],['inExp','exp',parseFloat],['inSave','save',parseFloat],
- ['inWealth','wealth',parseFloat],['inHouse','house',parseFloat],['inMortgage','mortgage',parseFloat],['inSal','sal',parseFloat],['inRateA','rateA',parseFloat],['inRateB','rateB',parseFloat],['inMult','mult',parseFloat]]
+ ['inWealth','wealth',parseFloat],['inHouse','house',parseFloat],['inMortgage','mortgage',parseFloat],['inSal','sal',parseFloat]]
 .forEach(([id,key,parse])=>{
   el(id).addEventListener('input', e=>{ state[key]=parse(e.target.value); update(); });
 });
