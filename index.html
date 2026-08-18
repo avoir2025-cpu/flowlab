@@ -182,6 +182,7 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
       <div class="field" id="fMortgage" style="display:none;">
         <div class="f-head"><div class="f-label">房貸餘額</div><div class="f-val"><span id="vMortgage"></span><small>萬</small></div></div>
         <input type="range" id="inMortgage" min="0" max="4000" step="50" value="0">
+        <div class="warn-note" id="mortWarn"></div>
       </div>
     </div>
 
@@ -339,6 +340,14 @@ function update(){
     sw.classList.add('show');
   }else{
     sw.classList.remove('show');
+  }
+
+  const mw = el('mortWarn');
+  if(state.house > 0 && state.mortgage > state.house){
+    mw.textContent = `房貸餘額 ${fmtCap(state.mortgage)} 萬超過房產市值 ${fmtCap(state.house)} 萬，數字對不上，請調整其中一項。`;
+    mw.classList.add('show');
+  }else{
+    mw.classList.remove('show');
   }
   ['inAge','inExp','inSave','inWealth','inHouse','inMortgage','inSal','inRateA','inRateB','inMult'].forEach(id=>paintRange(el(id)));
 
