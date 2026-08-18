@@ -191,7 +191,7 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
       <div class="vs-card now">
         <div class="t">照現在的存法</div>
         <div class="age" id="ageA">—</div>
-        <div class="cap">需要累積 <b id="capA">—</b> 萬</div>
+        <div class="cap" id="capACap">—</div>
       </div>
       <div class="vs-mid">vs</div>
       <div class="vs-card alt">
@@ -269,8 +269,24 @@ function monthsToTarget(W, S, r, T){
   return Math.log(f) / Math.log(1 + r);
 }
 
+/* 傳統路徑：本金＋利息提領到 85 歲。逐月累積，一旦資產足以支應「從當下活到 85 歲」的提領現值即可退休 */
+const LIFE_END = 85;
+function traditionalRetire(s){
+  const r = s.rateA/100/12;
+  let C = s.wealth;
+  for(let m=0; m<=1200; m++){
+    const ageNow = s.age + m/12;
+    if(ageNow >= LIFE_END) break;
+    const N = Math.round((LIFE_END - ageNow)*12);
+    const need = r>0 ? s.exp*(1-Math.pow(1+r,-N))/r : s.exp*N;
+    if(C >= need) return { m, cap: need };
+    C = C*(1+r) + s.save;
+  }
+  return { m: Infinity, cap: null };
+}
+
 function calc(s){
-  const capA = s.exp * 12 / (s.rateA/100);        // 靠定存利息過活所需本金（萬）
+  const tA = traditionalRetire(s);               // 傳統：本金提領到 85 歲
 
   /* 房產整合結構：整合貸款＝市值×8成，清償餘額拿回現金，×倍數投入；
      配息先支付整筆月付，剩餘為每月淨貢獻。淨貢獻≤0 就視同不做這個結構 */
@@ -293,10 +309,9 @@ function calc(s){
 
   const structNet = houseNet + creditNet;                        // 結構先到位的每月現金流
   const capB = Math.max(0, s.exp - structNet) / (s.rateB/100);   // 結構外還需要的配息本金
-  const mA = monthsToTarget(s.wealth, s.save, s.rateA/100/12, capA);
   const mB = monthsToTarget(s.wealth, s.save + structNet, s.rateB/100, capB);
-  return { capA, capB, houseNet, creditNet, structNet, cashOut, housePay,
-    ageA: mA === Infinity ? Infinity : s.age + mA/12,
+  return { capA: tA.cap, capB, houseNet, creditNet, structNet, cashOut, housePay,
+    ageA: tA.m === Infinity ? Infinity : s.age + tA.m/12,
     ageB: mB === Infinity ? Infinity : s.age + mB/12 };
 }
 
@@ -343,16 +358,18 @@ function update(){
   const r = calc(state);
   el('ageA').textContent = fmtAge(r.ageA);
   el('ageB').textContent = fmtAge(r.ageB);
-  el('capA').textContent = fmtCap(r.capA);
+  el('capACap').innerHTML = r.capA !== null
+    ? `需要累積 <b>${fmtCap(r.capA)} 萬</b><br>本金在 85 歲前用完`
+    : `85 歲前<br>存不到足夠的本金`;
   el('capBCap').innerHTML = r.structNet>0
     ? (r.capB>0
-        ? `每月現金流先到位 <b>+${r.structNet.toFixed(1)} 萬</b><br>再累積 <b>${fmtCap(r.capB)} 萬</b>`
-        : `每月現金流 <b>+${r.structNet.toFixed(1)} 萬</b><br>已可支應生活`)
-    : `只需要累積 <b>${fmtCap(r.capB)} 萬</b>`;
+        ? `每月現金流先到位 <b>+${r.structNet.toFixed(1)} 萬</b><br>再累積 <b>${fmtCap(r.capB)} 萬</b>・本金不動`
+        : `每月現金流 <b>+${r.structNet.toFixed(1)} 萬</b><br>已可支應生活・本金不動`)
+    : `只需要累積 <b>${fmtCap(r.capB)} 萬</b><br>本金不動`;
 
   let delta = '';
   if(r.ageA === Infinity && r.ageB !== Infinity){
-    delta = `照現在的存法<b>永遠到不了</b>，換個順序是 <b>${fmtAge(r.ageB)}</b>`;
+    delta = `照現在的存法，<b>85 歲前存不夠</b>；換個順序是 <b>${fmtAge(r.ageB)}</b>`;
   }else if(r.ageA !== Infinity && r.ageB !== Infinity){
     const d = Math.round(r.ageA - r.ageB);
     delta = d > 0 ? `同樣的收入與支出，差了 <b>${d} 年</b>的人生` : `你的條件已經相當接近，差別在結構安不安全`;
