@@ -173,6 +173,10 @@ footer p{font-size:.72rem;color:var(--muted);font-weight:300;line-height:1.9;tex
         <input type="range" id="i1Ltv" min="10" max="100" step="5" value="80">
       </div>
       <div class="field">
+        <div class="f-head"><div class="f-label">既有貸款餘額<small>整合進新貸款，先清償再取回現金</small></div><div class="f-val"><span id="v1Debt"></span><small>萬</small></div></div>
+        <input type="range" id="i1Debt" min="0" max="3000" step="50" value="0">
+      </div>
+      <div class="field">
         <div class="f-head"><div class="f-label">投入倍數<small>投入金額 ÷ 可動用資金</small></div><div class="f-val">×<span id="v1Lev"></span></div></div>
         <input type="range" id="i1Lev" min="1" max="2" step="0.1" value="2">
       </div>
@@ -420,10 +424,11 @@ document.querySelectorAll('#tabs .tab').forEach(t=>{
 /* =========================================================
    TAB 1 個人配置（正算／反算）
    ========================================================= */
-const s1 = { dir:'fwd', target:5, asset:1000, ltv:80, lev:2, yield:.7, rate:3, mode:'amortize', years:30 };
+const s1 = { dir:'fwd', target:5, asset:1000, ltv:80, debt:0, lev:2, yield:.7, rate:3, mode:'amortize', years:30 };
 function costPerWan(){ return s1.mode==='amortize' ? annuity(1, s1.rate, s1.years) : s1.rate/100/12; }
 function u1(){
   el('v1Target').textContent=s1.target; el('v1Asset').textContent=fmt(s1.asset);
+  el('v1Debt').textContent=fmt(s1.debt);
   el('v1Ltv').textContent=s1.ltv; el('v1Lev').textContent=s1.lev.toFixed(1);
   el('v1Yield').textContent=s1.yield.toFixed(2); el('v1YieldYr').textContent=(s1.yield*12).toFixed(1);
   el('v1Rate').textContent=s1.rate.toFixed(1); el('v1Years').textContent=s1.years;
@@ -433,40 +438,53 @@ function u1(){
   paintAll(el('t1'));
 
   const cpw = costPerWan();
-  const spread = s1.lev*s1.yield/100 - cpw;   // 每萬可動用資金的月淨貢獻
   if(s1.dir==='fwd'){
-    const loan=s1.asset*s1.ltv/100, invest=loan*s1.lev;
+    /* 整合貸款：新貸款＝資產×成數，先清償既有餘額，拿回現金再投入；月付以整筆新貸款計 */
+    const loan=s1.asset*s1.ltv/100;
+    const cashOut=Math.max(0, loan-s1.debt);
+    const invest=cashOut*s1.lev;
     const income=invest*s1.yield/100, cost=loan*cpw, net=income-cost;
+    const oldPay=s1.debt>0 ? annuity(s1.debt, s1.rate, s1.mode==='amortize'?s1.years:30) : 0;
     el('r1BigLbl').textContent='每月淨現金流';
     el('r1Big').textContent=''; el('r1Big').className='num '+(net>=0?'pos':'neg');
     el('r1Big').innerHTML=sign(net)+'<span class="unit">萬／月</span>';
     el('r1Rows').innerHTML=`
-      <div class="res-row"><span class="k">可動用資金</span><span class="v">${fmt(loan)} 萬</span></div>
+      <div class="res-row"><span class="k">整合後貸款</span><span class="v">${fmt(loan)} 萬</span></div>
+      ${s1.debt>0?`<div class="res-row"><span class="k">清償既有貸款</span><span class="v out">−${fmt(Math.min(s1.debt,loan))} 萬</span></div>`:''}
+      <div class="res-row"><span class="k">拿回現金</span><span class="v gold">${fmt(cashOut)} 萬</span></div>
       <div class="res-row"><span class="k">投入金額</span><span class="v">${fmt(invest)} 萬</span></div>
       <div class="res-row"><span class="k">每月現金流入（假設配息）</span><span class="v in">+${fmt(income)} 萬</span></div>
-      <div class="res-row"><span class="k">每月資金成本</span><span class="v out">−${fmt(cost)} 萬</span></div>
+      <div class="res-row"><span class="k">每月貸款月付（整筆）</span><span class="v out">−${fmt(cost)} 萬</span></div>
       <div class="res-row"><span class="k">損益兩平配息率</span><span class="v gold">${invest>0?(cost/invest*100).toFixed(2):'—'}%／月</span></div>`;
-    el('r1Note').innerHTML=`配息下修 20% 時淨現金流為 <b>${sign(invest*s1.yield*0.8/100-cost)} 萬</b>；配息中止時為 <b>${sign(-cost)} 萬</b>。`;
+    el('r1Note').innerHTML=
+      (s1.debt>0&&s1.debt>=loan?`<b style="color:var(--neg)">既有貸款已達或超過可整合額度，拿不回現金。</b><br>`:'')
+      +(s1.debt>0&&net>=0?`原本每月要自付約 <b>${fmt(oldPay)} 萬</b>的貸款月付，整合後全部月付由配息支付，還多出 <b>${sign(net)} 萬</b>。`:'')
+      +`配息下修 20% 時淨現金流為 <b>${sign(invest*s1.yield*0.8/100-cost)} 萬</b>；配息中止時為 <b>${sign(-cost)} 萬</b>。`;
   }else{
+    /* 反算：淨現金流 = (貸款−既有餘額)×倍數×配息 − 貸款×月付率 */
+    const spread = s1.lev*s1.yield/100 - cpw;
     el('r1BigLbl').textContent='需要的資產規模';
     if(spread<=0){
       el('r1Big').className='num neg'; el('r1Big').textContent='不可行';
       el('r1Rows').innerHTML='';
       el('r1Note').innerHTML='目前的假設下，配息貢獻低於資金成本，任何規模都無法達標。調高配息假設、拉長年期或降低資金成本後再看。';
     }else{
-      const loan=s1.target/spread, asset=loan/(s1.ltv/100), invest=loan*s1.lev;
+      const loan=(s1.target + s1.debt*s1.lev*s1.yield/100)/spread;
+      const asset=loan/(s1.ltv/100), cashOut=Math.max(0,loan-s1.debt), invest=cashOut*s1.lev;
       el('r1Big').className='num gold';
       el('r1Big').innerHTML=fmt(asset)+'<span class="unit">萬</span>';
       el('r1Rows').innerHTML=`
         <div class="res-row"><span class="k">目標每月淨現金流</span><span class="v in">+${fmt(s1.target)} 萬</span></div>
-        <div class="res-row"><span class="k">需要可動用資金</span><span class="v">${fmt(loan)} 萬</span></div>
+        <div class="res-row"><span class="k">需要整合後貸款</span><span class="v">${fmt(loan)} 萬</span></div>
+        ${s1.debt>0?`<div class="res-row"><span class="k">其中清償既有貸款</span><span class="v out">−${fmt(s1.debt)} 萬</span></div>`:''}
+        <div class="res-row"><span class="k">拿回現金</span><span class="v gold">${fmt(cashOut)} 萬</span></div>
         <div class="res-row"><span class="k">對應投入金額</span><span class="v">${fmt(invest)} 萬</span></div>
-        <div class="res-row"><span class="k">每月資金成本</span><span class="v out">−${fmt(loan*cpw)} 萬</span></div>`;
-      el('r1Note').innerHTML=`這 <b>${fmt(loan)} 萬</b>可動用資金，可由儲蓄、資產套現、資產貸款、信用額度組合而成，組合方式與入場資格請搭配「入場檢核」分頁。`;
+        <div class="res-row"><span class="k">每月貸款月付（整筆）</span><span class="v out">−${fmt(loan*cpw)} 萬</span></div>`;
+      el('r1Note').innerHTML=`這 <b>${fmt(cashOut)} 萬</b>現金，可由儲蓄、資產套現、資產貸款、信用額度組合而成，組合方式與入場資格請搭配「入場檢核」分頁。`;
     }
   }
 }
-[['i1Target','target'],['i1Asset','asset'],['i1Ltv','ltv'],['i1Lev','lev'],['i1Yield','yield'],['i1Rate','rate'],['i1Years','years']]
+[['i1Target','target'],['i1Asset','asset'],['i1Ltv','ltv'],['i1Debt','debt'],['i1Lev','lev'],['i1Yield','yield'],['i1Rate','rate'],['i1Years','years']]
 .forEach(([id,k])=>el(id).addEventListener('input',e=>{s1[k]=parseFloat(e.target.value);u1();}));
 document.querySelectorAll('#modeSeg button').forEach(b=>b.addEventListener('click',()=>{
   s1.mode=b.dataset.mode;
