@@ -169,6 +169,10 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
         <input type="range" id="inWealth" min="0" max="3000" step="50" value="100">
       </div>
       <div class="field">
+        <div class="f-head"><div class="f-label">名下房產市值<small>沒有就保持 0</small></div><div class="f-val"><span id="vHouse"></span><small>萬</small></div></div>
+        <input type="range" id="inHouse" min="0" max="5000" step="100" value="0">
+      </div>
+      <div class="field">
         <div class="f-head"><div class="f-label">平均月收入</div><div class="f-val"><span id="vSal"></span><small>萬／月</small></div></div>
         <input type="range" id="inSal" min="2" max="30" step="0.5" value="8">
       </div>
@@ -246,7 +250,7 @@ const CONFIG = {
 };
 
 const el = id => document.getElementById(id);
-let state = { age:35, exp:5, save:2, wealth:100, sal:8, rateA:1.7, rateB:0.7 };
+let state = { age:35, exp:5, save:2, wealth:100, house:0, sal:8, rateA:1.7, rateB:0.7 };
 
 /* 每月複利累積到目標本金所需月數；到不了回傳 Infinity */
 function monthsToTarget(W, S, r, T){
@@ -287,10 +291,11 @@ function update(){
   el('vExp').textContent = state.exp;
   el('vSave').textContent = state.save;
   el('vWealth').textContent = state.wealth.toLocaleString('zh-TW');
+  el('vHouse').textContent = state.house.toLocaleString('zh-TW');
   el('vSal').textContent = state.sal;
   el('vRateA').textContent = state.rateA.toFixed(1);
   el('vRateB').textContent = state.rateB.toFixed(2);
-  ['inAge','inExp','inSave','inWealth','inSal','inRateA','inRateB'].forEach(id=>paintRange(el(id)));
+  ['inAge','inExp','inSave','inWealth','inHouse','inSal','inRateA','inRateB'].forEach(id=>paintRange(el(id)));
 
   const r = calc(state);
   el('ageA').textContent = fmtAge(r.ageA);
@@ -313,18 +318,23 @@ function update(){
   el('whyLine').innerHTML = `為什麼差這麼多？傳統路徑要求你把本金存到「利息夠生活」，需要 <b>${fmtCap(r.capA)} 萬</b>；順序路徑是讓每一塊錢先進到會產生現金流的位置，需要的本金只有 <b>${fmtCap(r.capB)} 萬</b>，差了約 <b>${ratio.toFixed(1)} 倍</b>。差別不在你存多少，在錢排隊的順序。`;
 
   const credit = state.sal*22;
-  const resources = state.wealth + credit;
+  const houseLoan = state.house*0.8;
+  const resources = state.wealth + houseLoan + credit;
   const coverage = r.capB>0 ? resources/r.capB*100 : 0;
+  const parts = [`可動用資產 <b>${fmtCap(state.wealth)} 萬</b>`];
+  if(houseLoan>0) parts.push(`房產可貸空間約 <b>${fmtCap(houseLoan)} 萬</b>`);
+  parts.push(`信用空間約 <b>${fmtCap(credit)} 萬</b>`);
+  const partsText = parts.join('＋');
   el('resLine').innerHTML = coverage>=100
-    ? `其實你手上的資源已經夠了：可動用資產 <b>${fmtCap(state.wealth)} 萬</b>＋信用空間約 <b>${fmtCap(credit)} 萬</b>，合計 <b>${fmtCap(resources)} 萬</b>，超過順序路徑需要的本金。差的不是錢，是順序和結構。`
-    : `其實你手上已經有資源：可動用資產 <b>${fmtCap(state.wealth)} 萬</b>＋信用空間約 <b>${fmtCap(credit)} 萬</b>，合計 <b>${fmtCap(resources)} 萬</b>，離順序路徑需要的本金已經走了 <b>${Math.min(coverage,999).toFixed(0)}%</b>。剩下的怎麼補、怎麼安全地用，是可以坐下來聊的事。`;
+    ? `其實你手上的資源已經夠了：${partsText}，合計 <b>${fmtCap(resources)} 萬</b>，超過順序路徑需要的本金。差的不是錢，是順序和結構。`
+    : `其實你手上已經有資源：${partsText}，合計 <b>${fmtCap(resources)} 萬</b>，離順序路徑需要的本金已經走了 <b>${Math.min(coverage,999).toFixed(0)}%</b>。剩下的怎麼補、怎麼安全地用，是可以坐下來聊的事。`;
 
   el('sbA').textContent = fmtAge(r.ageA);
   el('sbB').textContent = fmtAge(r.ageB);
 }
 
 [['inAge','age',parseInt],['inExp','exp',parseFloat],['inSave','save',parseFloat],
- ['inWealth','wealth',parseFloat],['inSal','sal',parseFloat],['inRateA','rateA',parseFloat],['inRateB','rateB',parseFloat]]
+ ['inWealth','wealth',parseFloat],['inHouse','house',parseFloat],['inSal','sal',parseFloat],['inRateA','rateA',parseFloat],['inRateB','rateB',parseFloat]]
 .forEach(([id,key,parse])=>{
   el(id).addEventListener('input', e=>{ state[key]=parse(e.target.value); update(); });
 });
@@ -335,7 +345,7 @@ else{ el('lineBtn').addEventListener('click', e=>{ e.preventDefault(); alert('�
 
 el('copyBtn').addEventListener('click', async ()=>{
   const r = calc(state);
-  const text = `【退休試算結果】\n年齡 ${state.age}｜月開銷 ${state.exp} 萬｜月存 ${state.save} 萬｜可動用資產 ${state.wealth} 萬｜月收入 ${state.sal} 萬\n照現在的存法：${fmtAge(r.ageA)}\n換一個順序：${fmtAge(r.ageB)}\n想了解怎麼做到，請跟我聊聊`;
+  const text = `【退休試算結果】\n年齡 ${state.age}｜月開銷 ${state.exp} 萬｜月存 ${state.save} 萬｜可動用資產 ${state.wealth} 萬${state.house>0?`｜房產 ${state.house} 萬`:''}｜月收入 ${state.sal} 萬\n照現在的存法：${fmtAge(r.ageA)}\n換一個順序：${fmtAge(r.ageB)}\n想了解怎麼做到，請跟我聊聊`;
   try{
     await navigator.clipboard.writeText(text);
     el('copyBtn').textContent = '已複製！加好友後直接貼上就可以';
