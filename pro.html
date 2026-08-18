@@ -240,6 +240,14 @@ footer p{font-size:.72rem;color:var(--muted);font-weight:300;line-height:1.9;tex
         <input type="range" id="i2ym" min="0.3" max="1" step="0.05" value="0.7">
       </div>
       <div class="field">
+        <div class="f-head"><div class="f-label">平均月收入<small>信貸上限＝月收入 × 22（DBR）</small></div><div class="f-val"><span id="v2sal"></span><small>萬／月</small></div></div>
+        <input type="range" id="i2sal" min="2" max="40" step="0.5" value="23">
+      </div>
+      <div class="field">
+        <div class="f-head"><div class="f-label">配息認列收入比例<small>部分銀行個案認列，非通則；0＝保守不計</small></div><div class="f-val"><span id="v2recog"></span><small>%</small></div></div>
+        <input type="range" id="i2recog" min="0" max="100" step="10" value="0">
+      </div>
+      <div class="field">
         <div class="f-head"><div class="f-label">年度轉貸回收本金，再投入</div>
           <div class="seg" id="recSeg">
             <button data-rec="1" class="on">開</button>
@@ -472,13 +480,14 @@ document.querySelectorAll('#dirSeg button').forEach(b=>b.addEventListener('click
 /* =========================================================
    TAB 2 槓桿迴圈
    ========================================================= */
-const s2 = { L:500, rL:4, y:7, b:50, rB:2.86, ym:.7, rec:true };
+const s2 = { L:500, rL:4, y:7, b:50, rB:2.86, ym:.7, sal:23, recog:0, rec:true };
 function simLoop(){
   const mult = 1/(1-s2.b/100);
   let A = s2.L*mult, B = A*s2.b/100;
   let bal = s2.L, cash = 0, pendingInterest = 0;
-  const pay = annuity(s2.L, s2.rL, s2.y);
-  const rows=[{yr:0,A,B,bal,income:0,loanPay:0,intB:0,recycle:0,net:0,cashEnd:0}];
+  let pay = annuity(s2.L, s2.rL, s2.y);
+  const pay0 = pay;
+  const rows=[{yr:0,A,B,bal,income:0,loanPay:0,intB:0,recycle:0,net:0,limit:22*s2.sal}];
   for(let yr=1; yr<=10; yr++){
     let income=A*s2.ym*12/100, loanPay=0, principal=0;
     let b2=bal;
@@ -491,22 +500,30 @@ function simLoop(){
     bal=b2;
     const intB = pendingInterest;          // 去年質借利息，今年付
     pendingInterest = B*s2.rB/100;         // 今年的，明年付
+    /* 信貸上限＝22 ×（月薪＋認列的配息收入），認列比例 0 時上限固定 */
+    const limit = 22*(s2.sal + s2.recog/100 * A*s2.ym/100);
     let recycle=0;
-    if(s2.rec && principal>0){ recycle=principal; bal=Math.min(bal+principal, s2.L); }
+    if(s2.rec){
+      /* 轉貸目標：至少回到原額度；配息有認列時可隨上限擴額 */
+      const target = s2.recog>0 ? Math.max(s2.L, limit) : s2.L;
+      recycle = Math.max(0, target - bal);
+      if(recycle>0){ bal += recycle; pay = annuity(bal, s2.rL, s2.y); }  // 轉貸重起年期
+    }
     const net = income - loanPay - intB + recycle;
     cash += net;
     if(s2.rec && cash>0){
       const dA = cash*mult;
       A+=dA; B+=dA*s2.b/100; cash=0;
     }
-    rows.push({yr,A,B,bal,income,loanPay,intB,recycle,net,cashEnd:cash});
+    rows.push({yr,A,B,bal,income,loanPay,intB,recycle,net,limit});
   }
-  return {rows, pay, A0:s2.L*(1/(1-s2.b/100))};
+  return {rows, pay:pay0, A0:s2.L*mult};
 }
 function u2(){
   el('v2L').textContent=fmt(s2.L); el('v2rL').textContent=s2.rL.toFixed(1);
   el('v2y').textContent=s2.y; el('v2b').textContent=s2.b;
   el('v2rB').textContent=s2.rB.toFixed(2); el('v2ym').textContent=s2.ym.toFixed(2);
+  el('v2sal').textContent=s2.sal; el('v2recog').textContent=s2.recog;
   paintAll(el('t2'));
 
   const {rows, pay, A0} = simLoop();
@@ -517,21 +534,26 @@ function u2(){
   const c=el('r2Cash'); c.innerHTML=sign(cashMonthly)+'<span class="unit" style="font-size:.85rem;">萬</span>'; c.className='num '+(cashMonthly>=0?'pos':'neg');
   const a=el('r2Accr'); a.innerHTML=sign(accrMonthly)+'<span class="unit" style="font-size:.85rem;">萬</span>'; a.className='num '+(accrMonthly>=0?'pos':'neg');
 
+  const limit0 = 22*s2.sal;
+  const overDbr = s2.L > limit0;
   el('r2Rows').innerHTML=`
+    <div class="res-row"><span class="k">信貸上限（月收入 × 22）</span><span class="v ${overDbr?'out':'gold'}">${fmt(limit0)} 萬</span></div>
     <div class="res-row"><span class="k">啟動資產規模（倍數 ×${(1/(1-s2.b/100)).toFixed(2)}）</span><span class="v">${fmt(A0)} 萬</span></div>
     <div class="res-row"><span class="k">質借餘額</span><span class="v">${fmt(B0)} 萬</span></div>
     <div class="res-row"><span class="k">每月配息（假設）</span><span class="v in">+${fmt(mIncome)} 萬</span></div>
     <div class="res-row"><span class="k">每月貸款攤還</span><span class="v out">−${fmt(pay)} 萬</span></div>
     <div class="res-row"><span class="k">質借利息（年繳）</span><span class="v out">−${fmt(B0*s2.rB/100)} 萬／年</span></div>`;
   const last=rows[rows.length-1];
-  el('r2Note').innerHTML=`十年後（假設不變、每年轉貸成功）：資產規模 <b>${fmt(last.A)} 萬</b>、月配息 <b>${fmt(last.A*s2.ym/100)} 萬</b>、總負債 <b>${fmt(last.B+last.bal)} 萬</b>、淨資產 <b>${fmt(last.A-last.B-last.bal)} 萬</b>。`;
+  el('r2Note').innerHTML=(overDbr?`<b style="color:var(--neg)">注意：外部貸款 ${fmt(s2.L)} 萬已超過 DBR 上限 ${fmt(limit0)} 萬，這個額度以目前月收入貸不出來。</b><br>`:'')
+    +`十年後（假設不變、每年轉貸成功）：資產規模 <b>${fmt(last.A)} 萬</b>、月配息 <b>${fmt(last.A*s2.ym/100)} 萬</b>、外部貸款餘額 <b>${fmt(last.bal)} 萬</b>、總負債 <b>${fmt(last.B+last.bal)} 萬</b>、淨資產 <b>${fmt(last.A-last.B-last.bal)} 萬</b>`
+    +(s2.recog>0?`。配息認列 ${s2.recog}% 時，信貸上限由 <b>${fmt(limit0)} 萬</b>逐年擴至 <b>${fmt(last.limit)} 萬</b>，轉貸同時擴額，這就是「貸款越滾越大」的擴張迴圈；認列與否是各銀行個案審核，不能當作前提承諾。`:'。');
   const dropToCall = s2.b>0 ? (1 - s2.b/100/0.9)*100 : 100;
   el('r2Risk').innerHTML=`風險線：質借維持率假設 90% 為警戒，目前成數 ${s2.b}%，資產淨值下跌約 <b>${dropToCall.toFixed(0)}%</b> 即觸及警戒線（配息吃本金會加速逼近）。理解整個結構時，這一條是最重要的底線。`;
 
   /* 表格 */
-  let h='<tr><th>年</th><th>資產規模</th><th>質借餘額</th><th>貸款餘額</th><th>年配息</th><th>貸款攤還</th><th>質借利息</th><th>轉貸回收</th><th>年度淨現金</th><th>月配息</th></tr>';
+  let h='<tr><th>年</th><th>資產規模</th><th>質借餘額</th><th>貸款餘額</th><th>信貸上限</th><th>年配息</th><th>貸款攤還</th><th>質借利息</th><th>轉貸回收</th><th>年度淨現金</th><th>月配息</th></tr>';
   rows.forEach(r=>{
-    h+=`<tr><td>${r.yr}</td><td class="gold">${fmt(r.A)}</td><td>${fmt(r.B)}</td><td>${fmt(r.bal)}</td>
+    h+=`<tr><td>${r.yr}</td><td class="gold">${fmt(r.A)}</td><td>${fmt(r.B)}</td><td>${fmt(r.bal)}</td><td>${fmt(r.limit)}</td>
       <td class="pos">${r.yr?'+'+fmt(r.income):'—'}</td><td class="neg">${r.yr?'−'+fmt(r.loanPay):'—'}</td>
       <td class="neg">${r.yr?'−'+fmt(r.intB):'—'}</td><td>${r.yr&&r.recycle?'+'+fmt(r.recycle):'—'}</td>
       <td class="${r.net>=0?'pos':'neg'}">${r.yr?sign(r.net):'—'}</td><td class="gold">${fmt(r.A*s2.ym/100)}</td></tr>`;
@@ -564,7 +586,7 @@ function u2(){
   });
   svg.innerHTML=out;
 }
-[['i2L','L'],['i2rL','rL'],['i2y','y'],['i2b','b'],['i2rB','rB'],['i2ym','ym']]
+[['i2L','L'],['i2rL','rL'],['i2y','y'],['i2b','b'],['i2rB','rB'],['i2ym','ym'],['i2sal','sal'],['i2recog','recog']]
 .forEach(([id,k])=>el(id).addEventListener('input',e=>{s2[k]=parseFloat(e.target.value);u2();}));
 document.querySelectorAll('#recSeg button').forEach(b=>b.addEventListener('click',()=>{
   s2.rec=b.dataset.rec==='1';
