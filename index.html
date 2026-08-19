@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>你幾歲可以退休？｜FlowLab 現金流實驗室</title>
-<meta name="description" content="60 秒退休試算：照現在的存法，你幾歲能退休？換一個用錢的順序之後呢？兩個答案一次算給你看。教育性質情境模擬，所有假設自己調整。">
+<meta name="description" content="60 秒退休試算：照傳統做法，你幾歲能退休？換一個用錢的順序之後呢？兩個答案一次算給你看。教育性質情境模擬，所有假設自己調整。">
 <meta name="theme-color" content="#0B1220">
 <meta property="og:type" content="website">
 <meta property="og:title" content="你幾歲可以退休？｜FlowLab 現金流實驗室">
-<meta property="og:description" content="照現在的存法，和換一個順序之後，兩個退休年齡一次算給你看。60 秒，免費，不用留資料。">
+<meta property="og:description" content="照傳統做法，和換一個順序之後，兩個退休年齡一次算給你看。60 秒，免費，不用留資料。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230B1220'/%3E%3Cpath d='M20 72 L42 50 L58 60 L80 30' stroke='%23C8A96A' stroke-width='9' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -188,15 +188,15 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
       </div>
       <div class="field">
         <div class="f-head"><div class="f-label">平均月收入</div><div class="f-val"><span id="vSal"></span><small>萬／月</small></div></div>
-        <input type="range" id="inSal" min="2" max="30" step="0.5" value="8">
+        <input type="range" id="inSal" min="2" max="60" step="0.5" value="8">
       </div>
       <div class="field">
         <div class="f-head"><div class="f-label">每月生活開銷<small>退休後想維持的月生活水準</small></div><div class="f-val"><span id="vExp"></span><small>萬／月</small></div></div>
-        <input type="range" id="inExp" min="2" max="20" step="0.5" value="5">
+        <input type="range" id="inExp" min="1" max="30" step="0.5" value="5">
       </div>
       <div class="field">
         <div class="f-head"><div class="f-label">每月儲蓄</div><div class="f-val"><span id="vSave"></span><small>萬／月</small></div></div>
-        <input type="range" id="inSave" min="0" max="15" step="0.5" value="2">
+        <input type="range" id="inSave" min="0" max="60" step="0.5" value="3">
         <div class="warn-note" id="saveWarn"></div>
       </div>
       <div class="field">
@@ -216,7 +216,7 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
 
     <div class="vs-grid">
       <div class="vs-card now">
-        <div class="t">照現在的存法</div>
+        <div class="t">傳統做法</div>
         <div class="age" id="ageA">—</div>
         <div class="cap" id="capACap">—</div>
       </div>
@@ -303,7 +303,7 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
 
 <div class="sticky-bar" id="stickyBar">
   <div class="sb-num">
-    <div class="t">現在存法 vs 換個順序</div>
+    <div class="t">傳統做法 vs 換個順序</div>
     <div class="n"><span class="r" id="sbA">—</span>　→　<span class="g" id="sbB">—</span></div>
   </div>
   <a href="#cta">看看怎麼排</a>
@@ -317,7 +317,7 @@ const CONFIG = {
 };
 
 const el = id => document.getElementById(id);
-let state = { age:35, exp:5, save:2, wealth:100, house:0, mortgage:0, sal:8, rateA:1.7, rateB:0.7, mult:2 };
+let state = { age:35, exp:5, save:3, wealth:100, house:0, mortgage:0, sal:8, rateA:1.7, rateB:0.7, mult:2 };
 /* 房貸統一假設：貸 8 成、30 年期、利率 3% */
 const HOUSE = { ltv:0.8, years:30, rate:3.0 };
 /* 信貸統一假設：額度＝月收入×22、利率 4%；年度轉貸回收本金，穩態下成本視同只計息 */
@@ -419,6 +419,9 @@ function update(){
   if(room < state.save){
     sw.textContent = `目前的月收入 ${state.sal} 萬，和理想生活（月開銷 ${state.exp} 萬＋儲蓄 ${state.save} 萬）之間有落差。這個落差，正是需要讓資產開始工作的原因。`;
     sw.classList.add('show');
+  }else if(room - state.save >= 2){
+    sw.textContent = `以月收入 ${state.sal} 萬、開銷 ${state.exp} 萬來看，每月大約可以存下 ${room.toFixed(1)} 萬，目前填的是 ${state.save} 萬。如果不是刻意保守，建議調整，否則結果會失真。`;
+    sw.classList.add('show');
   }else{
     sw.classList.remove('show');
   }
@@ -448,7 +451,7 @@ function update(){
 
   let delta = '', whyTitle = '為什麼差這麼多？';
   if(r.ageA === Infinity && r.ageB !== Infinity){
-    delta = `靠存錢，被動收入永遠追不上開銷；換個順序：<span class="n">${fmtAge(r.ageB)}</span>`;
+    delta = `照傳統做法，被動收入永遠追不上開銷；換個順序：<span class="n">${fmtAge(r.ageB)}</span>`;
   }else if(r.ageA !== Infinity && r.ageB !== Infinity){
     const d = Math.round(r.ageA - r.ageB);
     if(d > 0){
@@ -507,7 +510,7 @@ el('leadForm').addEventListener('submit', async e=>{
 el('copyBtn').addEventListener('click', async ()=>{
   const r = calc(state);
   const who = lead ? `${lead.name}｜${lead.city}｜${lead.phone}｜代碼 ${lead.code}\n` : '';
-  const text = `【退休試算結果】\n${who}年齡 ${state.age}｜月收入 ${state.sal} 萬｜月開銷 ${state.exp} 萬｜月存 ${state.save} 萬｜累積資產 ${state.wealth} 萬${state.house>0?`｜房產 ${state.house} 萬（貸款餘額 ${state.mortgage} 萬）`:''}\n照現在的存法：${fmtAge(r.ageA)}\n換一個順序：${fmtAge(r.ageB)}\n想知道我的資金怎麼排，請跟我聊聊`;
+  const text = `【退休試算結果】\n${who}年齡 ${state.age}｜月收入 ${state.sal} 萬｜月開銷 ${state.exp} 萬｜月存 ${state.save} 萬｜累積資產 ${state.wealth} 萬${state.house>0?`｜房產 ${state.house} 萬（貸款餘額 ${state.mortgage} 萬）`:''}\n傳統做法：${fmtAge(r.ageA)}\n換一個順序：${fmtAge(r.ageB)}\n想知道我的資金怎麼排，請跟我聊聊`;
   try{
     await navigator.clipboard.writeText(text);
     el('copyBtn').textContent = '已複製！加入 LINE 後直接貼上';
