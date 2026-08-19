@@ -167,7 +167,7 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
 
 <section id="calc">
   <div class="wrap">
-    <div class="sec-intro">填完這幾個數字，你會看到兩個結果：照現在的方式大約幾歲退休，以及重新安排資金順序後，能提前多少。不用精準到每一塊錢，填大約的平均值就可以。</div>
+    <div class="sec-intro">填完這幾個數字，你會看到兩個結果：用傳統觀念、維持目前的生活水準，幾歲能退休；以及重新安排資金順序後，能提前多少。不用精準到每一塊錢，填大約的平均值就可以。</div>
     <div class="panel">
       <h3>你的現況</h3>
       <div class="field">
@@ -220,7 +220,7 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
     <div class="why-sec">
       <h3 id="whyTitle">為什麼差這麼多？</h3>
       <p>這個差距不是來自「存更多錢」。真正影響結果的，是資金什麼時候開始發揮作用、每一筆錢在不同階段扮演什麼角色。我們把這件事稱為<b style="color:var(--gold-bright);font-weight:700;">「錢的順序」</b>。</p>
-      <div class="gap-tease">你的結果背後還有三個關鍵數字：<b>先到位的月現金流</b>、<b>剩下的缺口本金</b>、<b>還沒動用的資源空間</b>。它們決定這條路徑對你成不成立。</div>
+      <div class="gap-tease">你的結果背後還有三個關鍵數字：<b>月現金流</b>、<b>擁有的資源</b>、<b>達成理想生活尚需的缺口</b>。它們決定這條路徑對你成不成立。</div>
       <a class="btn-gold" href="#cta">看看我的資金怎麼排</a>
     </div>
 
@@ -321,12 +321,12 @@ function calc(s){
   const tA = traditionalRetire(s);               // 補充參考：花光本金撐到 85 歲的版本
 
   /* 房產整合結構：整合貸款＝市值×8成，清償餘額拿回現金，×倍數投入；
-     配息先支付整筆月付，剩餘為每月淨貢獻。淨貢獻≤0 就視同不做這個結構 */
+     與信貸一致，年度轉貸取回攤還本金，穩態成本視同只計息。淨貢獻≤0 就視同不做這個結構 */
   let houseNet = 0, cashOut = 0, housePay = 0;
   if(s.house > 0){
     const loan = s.house * HOUSE.ltv;
     const c = Math.max(0, loan - s.mortgage);
-    housePay = annuityM(loan, HOUSE.rate, HOUSE.years);
+    housePay = loan * HOUSE.rate/100/12;
     const hn = c * s.mult * (s.rateB/100) - housePay;
     if(c > 0 && hn > 0){ houseNet = hn; cashOut = c; }
   }
@@ -392,14 +392,14 @@ function update(){
   el('ageA').textContent = fmtAge(r.ageA);
   el('ageB').textContent = fmtAge(r.ageB);
   el('capACap').innerHTML =
-    `同等被動收入要 <b>${fmtCap(r.capA)} 萬</b>本金<br>` +
+    `同等被動收入需要累積 <b>${fmtCap(r.capA)} 萬</b>本金<br>` +
     (r.drawAge !== Infinity
-      ? `連花光本金都要等到 <b>${Math.round(r.drawAge)} 歲</b>`
-      : `連花光本金都撐不到 85 歲`);
+      ? `依平均壽命，連花光本金也要等到 <b>${Math.round(r.drawAge)} 歲</b>才能退休`
+      : `依平均壽命，連花光本金都撐不到最後`);
   el('capBCap').innerHTML = r.structNet>0
     ? (r.capB>0
-        ? `每月現金流先到位 <b>+${r.structNet.toFixed(1)} 萬</b><br>再累積 <b>${fmtCap(r.capB)} 萬</b>・本金不動`
-        : `每月現金流 <b>+${r.structNet.toFixed(1)} 萬</b><br>已可支應生活・本金不動`)
+        ? `第一階段先到位：每月現金流 <b>+${r.structNet.toFixed(1)} 萬</b><br>持續累積，加速達成退休目標`
+        : `每月現金流 <b>+${r.structNet.toFixed(1)} 萬</b><br>已可支應理想生活`)
     : `只需要累積 <b>${fmtCap(r.capB)} 萬</b><br>本金不動`;
 
   let delta = '', whyTitle = '為什麼差這麼多？';
