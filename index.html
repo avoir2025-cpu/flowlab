@@ -286,7 +286,10 @@ function traditionalRetire(s){
 }
 
 function calc(s){
-  const tA = traditionalRetire(s);               // 傳統：本金提領到 85 歲
+  /* 主標準：兩條路徑都用「被動收入 ≥ 開銷、本金不動」同一把尺 */
+  const capA = s.exp * 12 / (s.rateA/100);       // 靠定存利息達到同等被動收入所需本金
+  const mA = monthsToTarget(s.wealth, s.save, s.rateA/100/12, capA);
+  const tA = traditionalRetire(s);               // 補充參考：花光本金撐到 85 歲的版本
 
   /* 房產整合結構：整合貸款＝市值×8成，清償餘額拿回現金，×倍數投入；
      配息先支付整筆月付，剩餘為每月淨貢獻。淨貢獻≤0 就視同不做這個結構 */
@@ -310,8 +313,9 @@ function calc(s){
   const structNet = houseNet + creditNet;                        // 結構先到位的每月現金流
   const capB = Math.max(0, s.exp - structNet) / (s.rateB/100);   // 結構外還需要的配息本金
   const mB = monthsToTarget(s.wealth, s.save + structNet, s.rateB/100, capB);
-  return { capA: tA.cap, capB, houseNet, creditNet, structNet, cashOut, housePay,
-    ageA: tA.m === Infinity ? Infinity : s.age + tA.m/12,
+  return { capA, capB, houseNet, creditNet, structNet, cashOut, housePay,
+    ageA: mA === Infinity ? Infinity : s.age + mA/12,
+    drawAge: tA.m === Infinity ? Infinity : s.age + tA.m/12,
     ageB: mB === Infinity ? Infinity : s.age + mB/12 };
 }
 
@@ -358,9 +362,11 @@ function update(){
   const r = calc(state);
   el('ageA').textContent = fmtAge(r.ageA);
   el('ageB').textContent = fmtAge(r.ageB);
-  el('capACap').innerHTML = r.capA !== null
-    ? `需要累積 <b>${fmtCap(r.capA)} 萬</b><br>本金在 85 歲前用完`
-    : `85 歲前<br>存不到足夠的本金`;
+  el('capACap').innerHTML =
+    `同等被動收入要 <b>${fmtCap(r.capA)} 萬</b>本金<br>` +
+    (r.drawAge !== Infinity
+      ? `連花光本金都要等到 <b>${Math.round(r.drawAge)} 歲</b>`
+      : `連花光本金都撐不到 85 歲`);
   el('capBCap').innerHTML = r.structNet>0
     ? (r.capB>0
         ? `每月現金流先到位 <b>+${r.structNet.toFixed(1)} 萬</b><br>再累積 <b>${fmtCap(r.capB)} 萬</b>・本金不動`
@@ -369,7 +375,7 @@ function update(){
 
   let delta = '';
   if(r.ageA === Infinity && r.ageB !== Infinity){
-    delta = `照現在的存法，<b>85 歲前存不夠</b>；換個順序是 <b>${fmtAge(r.ageB)}</b>`;
+    delta = `靠存錢，被動收入<b>永遠追不上開銷</b>；換個順序是 <b>${fmtAge(r.ageB)}</b>`;
   }else if(r.ageA !== Infinity && r.ageB !== Infinity){
     const d = Math.round(r.ageA - r.ageB);
     delta = d > 0 ? `同樣的收入與支出，差了 <b>${d} 年</b>的人生` : `你的條件已經相當接近，差別在結構安不安全`;
