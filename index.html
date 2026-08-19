@@ -46,7 +46,19 @@ header{position:sticky;top:0;z-index:50;background:rgba(11,18,32,.82);backdrop-f
 .eyebrow{display:inline-block;font-size:.78rem;letter-spacing:.32em;color:var(--gold);border:1px solid var(--line);border-radius:999px;padding:6px 18px 6px 22px;margin-bottom:24px;}
 .hero h1{font-family:'Noto Serif TC',serif;font-weight:700;font-size:clamp(1.9rem,5vw,3.1rem);line-height:1.4;letter-spacing:.04em;margin-bottom:16px;}
 .hero h1 .hl{color:var(--gold-bright);}
-.hero p.sub{color:var(--muted);font-size:clamp(.95rem,1.6vw,1.06rem);font-weight:300;max-width:560px;margin:0 auto;}
+.hero p.sub{color:var(--muted);font-size:clamp(.95rem,1.6vw,1.06rem);font-weight:300;max-width:560px;margin:0 auto 30px;}
+.hero-note{margin-top:16px;font-size:.8rem;color:var(--muted);letter-spacing:.06em;}
+.sec-intro{text-align:center;color:var(--muted);font-weight:300;font-size:.92rem;max-width:520px;margin:0 auto 26px;line-height:1.8;}
+.delta .n{font-family:'Noto Serif TC',serif;font-weight:700;font-size:clamp(1.7rem,4.5vw,2.5rem);color:var(--gold-bright);font-variant-numeric:tabular-nums;padding:0 4px;}
+.why-sec{text-align:center;margin-top:34px;}
+.why-sec h3{font-family:'Noto Serif TC',serif;font-weight:600;font-size:clamp(1.2rem,2.6vw,1.55rem);letter-spacing:.04em;margin-bottom:12px;}
+.why-sec p{color:var(--muted);font-weight:300;font-size:.93rem;max-width:520px;margin:0 auto 18px;line-height:1.85;}
+.gap-tease{max-width:520px;margin:0 auto 24px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 22px;font-size:.9rem;font-weight:300;line-height:1.85;color:var(--ink);}
+.gap-tease b{color:var(--gold-bright);}
+.order-sec{background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 55%,var(--bg) 100%);text-align:center;}
+.order-sec h2{font-family:'Noto Serif TC',serif;font-weight:600;font-size:clamp(1.3rem,2.8vw,1.7rem);letter-spacing:.05em;margin-bottom:16px;}
+.order-sec p{color:var(--muted);font-weight:300;font-size:.95rem;max-width:540px;margin:0 auto;line-height:1.95;}
+.no-sell{margin-top:34px !important;color:var(--ink) !important;font-size:1.02rem !important;font-weight:300;letter-spacing:.05em;line-height:2 !important;}
 
 section{padding:52px 0;}
 
@@ -139,7 +151,7 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
 <header>
   <div class="wrap nav">
     <div class="logo"><em>FlowLab</em>｜現金流實驗室</div>
-    <a class="nav-cta" href="#cta">想了解怎麼做到</a>
+    <a class="nav-cta" href="#cta">取得完整分析</a>
   </div>
 </header>
 
@@ -147,12 +159,15 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
   <div class="wrap">
     <div class="eyebrow">60 秒免費試算</div>
     <h1 class="serif">你<span class="hl">幾歲</span>可以退休？</h1>
-    <p class="sub">同一份收入、同一份支出，算出兩個答案：照現在的存法，和換一個「錢的順序」之後。不用註冊、不用留資料。</p>
+    <p class="sub">不增加收入、不降低生活品質。先看看：如果只是重新安排資金的使用順序，你的退休時間可能差多少？</p>
+    <a class="btn-gold" href="#calc">開始我的退休試算</a>
+    <div class="hero-note">🔒 不用註冊、不留資料，先算再說</div>
   </div>
 </div>
 
 <section id="calc">
   <div class="wrap">
+    <div class="sec-intro">填完這幾個數字，你會看到兩個結果：照現在的方式大約幾歲退休，以及重新安排資金順序後，能提前多少。</div>
     <div class="panel">
       <h3>你的現況</h3>
       <div class="field">
@@ -201,7 +216,13 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
       </div>
     </div>
     <div class="delta" id="deltaLine"></div>
-    <div class="why" id="whyLine"></div>
+
+    <div class="why-sec">
+      <h3 id="whyTitle">為什麼差這麼多？</h3>
+      <p>這個差距不是來自「存更多錢」。真正影響結果的，是資金什麼時候開始產生現金流，以及每一筆錢在不同階段扮演什麼角色。</p>
+      <div class="gap-tease">你的結果背後還有三個關鍵數字：<b>先到位的月現金流</b>、<b>剩下的缺口本金</b>、<b>還沒動用的資源空間</b>。它們決定這條路徑對你成不成立。</div>
+      <a class="btn-gold" href="#cta">取得我的完整分析</a>
+    </div>
 
     <div class="honest-strip">
       本頁為教育性質的情境試算，所有數字皆為假設值。
@@ -209,15 +230,23 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
   </div>
 </section>
 
+<section class="order-sec">
+  <div class="wrap">
+    <h2 class="serif">什麼叫「資金的使用順序」？</h2>
+    <p>不是追求更高的報酬，也不是要你承擔更高的風險。而是重新思考：現在的每一筆錢，是不是放在最適合它的位置？有些錢負責生活，有些錢負責累積，有些錢負責創造現金流。這個工具做的事，就是先把這個順序算清楚。</p>
+    <p class="no-sell">你不一定需要找我們。<br>先把自己的數字算清楚，再決定下一步。</p>
+  </div>
+</section>
+
 <section class="cta-sec" id="cta">
   <div class="wrap">
     <div class="cta-box">
-      <h2 class="serif" id="ctaTitle">兩個年齡的差距，<br>來自「錢的順序」</h2>
-      <p>需要的那筆起始資金，不一定要全部用存的。怎麼盤點你手上可運用的資源、怎麼安全地換順序，加 LINE 聊聊，或直接參加最近一場實體分享會。</p>
-      <a class="btn-gold" id="lineBtn" href="#" target="_blank" rel="noopener">加 LINE，了解怎麼做到</a>
+      <h2 class="serif" id="ctaTitle">取得你的完整分析</h2>
+      <p>不用重新填資料：複製你的試算結果、加入 LINE 貼上，我們接著幫你看，先到位的現金流、缺口本金、資源空間，以及下一步可以怎麼想。</p>
+      <a class="btn-gold" id="lineBtn" href="#" target="_blank" rel="noopener">加入 LINE，取得完整分析</a>
       <br>
       <button class="btn-ghost" id="copyBtn">複製我的試算結果，加好友後直接貼上</button>
-      <div class="cta-note">每月<em>北・中・南</em>都有實體分享會，加 LINE 索取最新場次</div>
+      <div class="cta-note">想把數字真正看懂？每月<em>北・中・南</em>有實體分享會，加 LINE 索取最近場次</div>
     </div>
   </div>
 </section>
@@ -234,7 +263,7 @@ footer .brand-line em{font-style:normal;color:var(--gold);}
     <div class="t">現在存法 vs 換個順序</div>
     <div class="n"><span class="r" id="sbA">—</span>　→　<span class="g" id="sbB">—</span></div>
   </div>
-  <a href="#cta">怎麼做到</a>
+  <a href="#cta">取得完整分析</a>
 </div>
 
 <script>
@@ -373,18 +402,22 @@ function update(){
         : `每月現金流 <b>+${r.structNet.toFixed(1)} 萬</b><br>已可支應生活・本金不動`)
     : `只需要累積 <b>${fmtCap(r.capB)} 萬</b><br>本金不動`;
 
-  let delta = '';
+  let delta = '', whyTitle = '為什麼差這麼多？';
   if(r.ageA === Infinity && r.ageB !== Infinity){
-    delta = `靠存錢，被動收入<b>永遠追不上開銷</b>；換個順序是 <b>${fmtAge(r.ageB)}</b>`;
+    delta = `靠存錢，被動收入永遠追不上開銷；換個順序：<span class="n">${fmtAge(r.ageB)}</span>`;
   }else if(r.ageA !== Infinity && r.ageB !== Infinity){
     const d = Math.round(r.ageA - r.ageB);
-    delta = d > 0 ? `同樣的收入與支出，差了 <b>${d} 年</b>的人生` : `你的條件已經相當接近，差別在結構安不安全`;
+    if(d > 0){
+      delta = `同樣的收入與支出，<span class="n">提前 ${d} 年</span>`;
+      whyTitle = `為什麼會差 ${d} 年？`;
+    }else{
+      delta = '你的條件已經相當接近，差別在結構安不安全';
+    }
   }else{
-    delta = '把「每月能存的錢」往上調一點，看看兩條路徑的差距';
+    delta = '把「每月儲蓄」往上調一點，看看兩條路徑的差距';
   }
   el('deltaLine').innerHTML = delta;
-
-  el('whyLine').innerHTML = `差別不在你存多少，在錢排隊的順序——試算已把你的資產、信用空間${state.house>0&&r.houseNet>0?'、房產':''}排進會產生現金流的位置。實際怎麼走，加 LINE 聊。`;
+  el('whyTitle').textContent = whyTitle;
 
   el('sbA').textContent = fmtAge(r.ageA);
   el('sbB').textContent = fmtAge(r.ageB);
